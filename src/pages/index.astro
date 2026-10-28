@@ -17,12 +17,15 @@ import {
 
 const base = import.meta.env.BASE_URL;
 
-// Awards.txt: scholarships and academic, then competition results.
-const awardGroups = [
-  ...awards,
+// Awards.txt: scholarships and academic, then competition results (with
+// the project URL on the next line when there is one).
+const awardGroups: { group: string; items: { text: string; url?: string }[] }[] = [
+  ...awards.map((g) => ({ group: g.group, items: g.items.map((text) => ({ text })) })),
   {
     group: 'Competitions',
-    items: competitions.filter((c) => c.tag).map((c) => `${c.tag}: ${c.title} (${c.date})`),
+    items: competitions
+      .filter((c) => c.tag)
+      .map((c) => ({ text: `${c.tag}: ${c.title} (${c.date})`, url: c.link?.href })),
   },
 ];
 
@@ -134,7 +137,17 @@ const builtPct = Math.min(100, Math.max(0, ((Date.now() - msStart) / (msEnd - ms
           <h3 class="notepad__line">{g.group}</h3>
           <p class="notepad__line" aria-hidden="true">{'-'.repeat(g.group.length)}</p>
           <ul role="list">
-            {g.items.map((item) => <li class="notepad__line">* {item}</li>)}
+            {g.items.map((item) => (
+              <li class="notepad__line">
+                * {item.text}
+                {item.url && (
+                  <>
+                    <br />
+                    <a class="notepad__url" href={item.url} target="_blank" rel="noopener">{item.url}</a>
+                  </>
+                )}
+              </li>
+            ))}
           </ul>
         </section>
       ))}
@@ -386,6 +399,9 @@ const builtPct = Math.min(100, Math.max(0, ((Date.now() - msStart) / (msEnd - ms
   .notepad li {
     padding-left: 2ch;
     text-indent: -2ch;
+  }
+  .notepad__url {
+    overflow-wrap: anywhere;
   }
   .notepad__caret {
     display: inline-block;
