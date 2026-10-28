@@ -4,18 +4,18 @@ import Icon, { type IconName } from './Icon.astro';
 import { profile } from '../data/content';
 
 const base = import.meta.env.BASE_URL;
-const shortcuts: { label: string; href: string; icon: IconName }[] = [
+const shortcuts: { label: string; href: string; icon: IconName; external?: boolean }[] = [
   { label: 'About Me', href: `${base}#intro`, icon: 'user' },
   { label: 'Research', href: `${base}#research`, icon: 'folder' },
   { label: 'Blog', href: `${base}blog/`, icon: 'notepad' },
-  { label: 'My CV', href: profile.cv, icon: 'document' },
+  { label: 'My CV', href: profile.cv, icon: 'document', external: true },
   { label: 'E-mail', href: `mailto:${profile.email}`, icon: 'mail' },
 ];
 ---
 
 <nav class="desktop-icons" aria-label="Shortcuts">
   {shortcuts.map((s) => (
-    <a href={s.href}>
+    <a href={s.href} target={s.external ? '_blank' : undefined} rel={s.external ? 'noopener' : undefined}>
       <Icon name={s.icon} size={40} />
       <span>{s.label}</span>
     </a>

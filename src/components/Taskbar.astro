@@ -65,7 +65,7 @@ const home = (id: string) => `${base}#${id}`;
         <a href={`${base}blog/`}><Icon name="notepad" size={22} /><span>Blog</span></a>
       </li>
       <li>
-        <a href={profile.cv}><Icon name="document" size={22} /><span>My CV</span></a>
+        <a href={profile.cv} target="_blank" rel="noopener"><Icon name="document" size={22} /><span>My CV</span></a>
       </li>
       <li class="start-menu__sep" aria-hidden="true"></li>
       {profile.links.map((l) => (

@@ -24,8 +24,7 @@ export const profile = {
     { label: 'LinkedIn', href: 'https://www.linkedin.com/in/antoine-lafrance' },
     // TODO: add Google Scholar / OpenReview when available.
   ],
-  // TODO: put an English CV at public/cv.pdf (without the phone number).
-  cv: '/cv.pdf',
+  cv: 'https://drive.google.com/file/d/15ZAAtj8s3GgXIUZy5EkmTzTjqpYIDStV/view?usp=sharing',
 };
 
 export const orgLinks = {

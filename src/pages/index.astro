@@ -78,7 +78,7 @@ const builtPct = Math.min(100, Math.max(0, ((Date.now() - msStart) / (msEnd - ms
         <p class="about__buttons">
           <a class="button button--default" href={`mailto:${profile.email}`}>E-mail me</a>
           {profile.links.map((l) => <a class="button" href={l.href}>{l.label}</a>)}
-          <a class="button" href={profile.cv}>My CV</a>
+          <a class="button" href={profile.cv} target="_blank" rel="noopener">My CV</a>
         </p>
       </div>
     </div>
