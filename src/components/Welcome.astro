@@ -15,7 +15,7 @@ import { photo, photoFocus } from '../data/photo';
   <div class="welcome__middle">
     <div class="welcome__left">
       <p class="welcome__brand" id="welcome-title">{profile.name}</p>
-      <p class="welcome__hint" data-welcome-hint>To begin, click your user name</p>
+      <p class="welcome__hint" data-welcome-hint></p>
     </div>
     <div class="welcome__divider" aria-hidden="true"></div>
     <div class="welcome__right">
@@ -40,7 +40,6 @@ import { photo, photoFocus } from '../data/photo';
       <span class="welcome__power" aria-hidden="true"></span>
       Turn off computer
     </button>
-    <p class="welcome__note">After you log on, you can open any window from the Start menu.</p>
   </div>
 
   <div class="welcome__safe" data-welcome-safe hidden>
@@ -176,6 +175,10 @@ import { photo, photoFocus } from '../data/photo';
     margin-top: 10px;
     font-size: clamp(15px, 1.6vw, 18px);
   }
+  /* Empty until log on, when it shows "welcome". */
+  .welcome__hint:empty {
+    display: none;
+  }
   .welcome.is-loading .welcome__hint {
     font: italic bold clamp(32px, 5vw, 56px) var(--font-title);
     text-shadow: 1px 2px 3px rgba(0, 0, 0, 0.35);
@@ -279,12 +282,6 @@ import { photo, photoFocus } from '../data/photo';
     height: 9px;
     background: #fff;
   }
-  .welcome__note {
-    max-width: 300px;
-    color: #d6e3ff;
-    font-size: 13px;
-    text-align: right;
-  }
 
   .welcome__safe {
     position: absolute;
@@ -328,9 +325,6 @@ import { photo, photoFocus } from '../data/photo';
     .welcome__user {
       border-radius: 10px;
       padding-right: 24px;
-    }
-    .welcome__note {
-      display: none;
     }
   }
 </style>

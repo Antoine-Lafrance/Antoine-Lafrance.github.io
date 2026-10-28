@@ -3,7 +3,7 @@
 // achievements to collect. The full list is always readable below the
 // game; collected ones light up (remembered in this browser).
 import Window from './Window.astro';
-import { beyondIntro, personal, competitions, leadership } from '../data/content';
+import { personal, competitions, leadership, type Card } from '../data/content';
 
 const comp = (title: string) => competitions.find((c) => c.title === title)!;
 const club = (title: string) => leadership.find((c) => c.title === title)!;
@@ -20,21 +20,20 @@ const achievements = [
   {
     id: 'companies',
     icon: 'trophy',
-    title: '40+ AI companies visited',
+    title: '80+ companies visited',
     tag: 'PolyMonde',
     date: 'Belgium · Netherlands · South Korea',
-    text: 'With PolyMonde, I visited more than 40 companies working in artificial intelligence across three countries.',
+    text: 'With PolyMonde, I visited more than 80 companies with research focuses ranging from AI to critical minerals, across three countries.',
   },
 ];
 
-function pick(c: { title: string; tag?: string; date: string; text: string }) {
-  return { title: c.title, tag: c.tag ?? '', date: c.date, text: c.text };
+function pick(c: Card) {
+  return { title: c.title, tag: c.tag ?? '', date: c.date, text: c.text, link: c.link };
 }
 ---
 
 <Window id="beyond" title="Beyond Research – Adventure" icon="people" flush>
   <div class="beyond">
-    <p class="beyond__intro">{beyondIntro} Play through the years below, or just read the list.</p>
     {personal && <p class="beyond__intro">{personal}</p>}
 
     <div class="game" data-achievements={JSON.stringify(achievements.map(({ id, icon, title }) => ({ id, icon, title })))}>
@@ -70,6 +69,11 @@ function pick(c: { title: string; tag?: string; date: string; text: string }) {
             </p>
             <p class="ach__date">{a.date}</p>
             <p class="ach__text">{a.text}</p>
+            {a.link && (
+              <p class="ach__link">
+                <a href={a.link.href} target="_blank" rel="noopener">{a.link.label} ↗</a>
+              </p>
+            )}
           </div>
         </li>
       ))}
@@ -339,5 +343,9 @@ function pick(c: { title: string; tag?: string; date: string; text: string }) {
   .ach__text {
     margin-top: 4px;
     font-size: 13.5px;
+  }
+  .ach__link {
+    margin-top: 6px;
+    font-size: 13px;
   }
 </style>

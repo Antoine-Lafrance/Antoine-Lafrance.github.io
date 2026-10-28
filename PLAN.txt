@@ -115,7 +115,7 @@ Top nav (same on every page):  Antoine Lafrance   About · Research · Blog · C
        - M.Sc. Computer Engineering, Mila / Polytechnique Montréal,
          2026 – 2028 (expected). Supervisor: Sarath Chandar.
        - B.Eng. Software Engineering, Polytechnique Montréal,
-         2022 – 2026. GPA 3.98/4.
+         2022 – 2026. GPA 3.97/4.
 
 2.4  EXPERIENCE  (compact timeline, 1 line + 1 short sentence each)
        - Research Assistant in kidney transplantation, Polytechnique
@@ -152,7 +152,7 @@ Top nav (same on every page):  Antoine Lafrance   About · Research · Blog · C
          - PolyMonde (Polytechnique's oldest student committee): Head of
            Fundraising (Sept 2025 – 2027); builds corporate partnerships
            and funds the committee's initiatives. Through PolyMonde,
-           visited 40+ AI companies across three countries. This is a
+           visited 80+ companies (research on AI, critical minerals, etc.) across three countries. This is a
            good candidate for a highlight card (naming the countries
            would make it more concrete).
          - CCGP (Polytechnique consulting club): VP Competitions;

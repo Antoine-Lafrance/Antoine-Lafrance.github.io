@@ -42,10 +42,22 @@ const firstSlide = (track: number) => slides.findIndex((s) => s.track === track)
       <p class="vlc__subtitle" data-subtitle aria-hidden="true">{slides[0].caption}</p>
     </div>
 
-    <div class="vlc__seek" aria-hidden="true">
-      <span data-elapsed>00:00</span>
-      <span class="vlc__groove"><span class="vlc__fill" data-fill></span></span>
-      <span>{clock(total)}</span>
+    <div class="vlc__seek">
+      <span data-elapsed aria-hidden="true">00:00</span>
+      <span
+        class="vlc__groove"
+        role="slider"
+        tabindex="0"
+        aria-label="Position in slideshow"
+        aria-valuemin="0"
+        aria-valuemax={total}
+        aria-valuenow="0"
+        aria-valuetext={`00:00 of ${clock(total)}`}
+        data-seek
+      >
+        <span class="vlc__fill" data-fill></span>
+      </span>
+      <span aria-hidden="true">{clock(total)}</span>
     </div>
 
     <div class="vlc__controls">
@@ -126,6 +138,7 @@ const firstSlide = (track: number) => slides.findIndex((s) => s.track === track)
   const fill = player.querySelector<HTMLElement>('[data-fill]')!;
   const elapsedEl = player.querySelector<HTMLElement>('[data-elapsed]')!;
   const toggleBtn = player.querySelector<HTMLButtonElement>('[data-act="toggle"]')!;
+  const seekBar = player.querySelector<HTMLElement>('[data-seek]')!;
 
   const SLIDE_MS = Number(player.dataset.seconds) * 1000;
   const TOTAL_MS = SLIDE_MS * slideEls.length;
@@ -162,7 +175,8 @@ const firstSlide = (track: number) => slides.findIndex((s) => s.track === track)
     osdTimer = window.setTimeout(() => osd.classList.remove('is-on'), 2000);
   };
 
-  const go = (next: number) => {
+  /** Show slide `next`; `instant` skips the transition (used while seeking). */
+  const go = (next: number, instant = false) => {
     next = (next + slideEls.length) % slideEls.length;
     if (next === index) return;
     finishTransition();
@@ -174,7 +188,7 @@ const firstSlide = (track: number) => slides.findIndex((s) => s.track === track)
     from.setAttribute('aria-hidden', 'true');
     to.removeAttribute('aria-hidden');
     to.classList.add('is-active');
-    if (!reduced) {
+    if (!reduced && !instant) {
       to.dataset.t = TRANSITIONS[transitionCount++ % TRANSITIONS.length];
       to.classList.add('is-entering');
       to.addEventListener('animationend', finishTransition, { once: true });
@@ -194,6 +208,17 @@ const firstSlide = (track: number) => slides.findIndex((s) => s.track === track)
     const pos = index * SLIDE_MS + elapsed;
     fill.style.width = `${(pos / TOTAL_MS) * 100}%`;
     elapsedEl.textContent = clock(pos);
+    seekBar.setAttribute('aria-valuenow', String(Math.floor(pos / 1000)));
+    seekBar.setAttribute('aria-valuetext', `${clock(pos)} of ${clock(TOTAL_MS)}`);
+  };
+
+  /** Jump to a position (ms) in the whole slideshow. */
+  const seekTo = (ms: number, instant: boolean) => {
+    ms = Math.max(0, Math.min(ms, TOTAL_MS - 1));
+    const target = Math.floor(ms / SLIDE_MS);
+    if (target !== index) go(target, instant);
+    elapsed = ms - target * SLIDE_MS;
+    render();
   };
 
   const setPlaying = (on: boolean) => {
@@ -216,6 +241,51 @@ const firstSlide = (track: number) => slides.findIndex((s) => s.track === track)
   };
 
   new IntersectionObserver(([entry]) => (visible = entry.isIntersecting)).observe(screen);
+
+  // Seek bar: click or drag to scrub. Playback holds while dragging.
+  let wasPlaying = false;
+  const posFromPointer = (e: PointerEvent) => {
+    const r = seekBar.getBoundingClientRect();
+    return ((e.clientX - r.left) / r.width) * TOTAL_MS;
+  };
+  seekBar.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    seekBar.setPointerCapture(e.pointerId);
+    seekBar.classList.add('is-dragging');
+    wasPlaying = playing;
+    playing = false;
+    seekBar.focus({ preventScroll: true });
+    seekTo(posFromPointer(e), true);
+  });
+  seekBar.addEventListener('pointermove', (e) => {
+    if (seekBar.classList.contains('is-dragging')) seekTo(posFromPointer(e), true);
+  });
+  const endDrag = () => {
+    if (!seekBar.classList.contains('is-dragging')) return;
+    seekBar.classList.remove('is-dragging');
+    playing = wasPlaying;
+    last = performance.now();
+  };
+  seekBar.addEventListener('pointerup', endDrag);
+  seekBar.addEventListener('pointercancel', endDrag);
+
+  // Keyboard: arrows step one second, Page keys a whole photo, Home/End.
+  seekBar.addEventListener('keydown', (e) => {
+    const pos = index * SLIDE_MS + elapsed;
+    const moves: Record<string, number> = {
+      ArrowLeft: pos - 1000,
+      ArrowDown: pos - 1000,
+      ArrowRight: pos + 1000,
+      ArrowUp: pos + 1000,
+      PageDown: (index - 1) * SLIDE_MS,
+      PageUp: (index + 1) * SLIDE_MS,
+      Home: 0,
+      End: TOTAL_MS - 1,
+    };
+    if (!(e.key in moves)) return;
+    e.preventDefault();
+    seekTo(moves[e.key], false);
+  });
 
   player.addEventListener('click', (e) => {
     const btn = (e.target as Element).closest<HTMLElement>('[data-act]');
@@ -403,6 +473,23 @@ const firstSlide = (track: number) => slides.findIndex((s) => s.track === track)
     border: 1px solid #8c8a7e;
     border-radius: 4px;
     background: linear-gradient(180deg, #d9d7cc, #fff);
+    cursor: pointer;
+    touch-action: none;
+  }
+  /* A taller invisible hit area, so the thin bar is easy to grab. */
+  .vlc__groove::before {
+    content: '';
+    position: absolute;
+    inset: -8px 0;
+  }
+  .vlc__groove:focus-visible {
+    outline: 1px dotted #000;
+    outline-offset: 4px;
+  }
+  .vlc__groove:hover .vlc__fill::after,
+  .vlc__groove.is-dragging .vlc__fill::after {
+    background: radial-gradient(circle at 35% 30%, #fff, #ffd9a8);
+    border-color: #e06d00;
   }
   .vlc__fill {
     position: absolute;
@@ -545,15 +632,16 @@ const firstSlide = (track: number) => slides.findIndex((s) => s.track === track)
   .vlc__playlist tbody tr {
     cursor: pointer;
   }
-  .vlc__playlist tbody tr:hover {
+  /* Only inactive rows get the hover tint; the active row stays blue
+     so its white text stays readable. */
+  .vlc__playlist tbody tr:not(.is-active):hover {
     background: #eef4fd;
   }
   .vlc__playlist tbody tr:focus-visible {
     outline: 1px dotted #000;
     outline-offset: -1px;
   }
-  .vlc__playlist tr.is-active,
-  .vlc__playlist tr.is-active:hover {
+  .vlc__playlist tr.is-active {
     background: var(--select);
     color: #fff;
   }

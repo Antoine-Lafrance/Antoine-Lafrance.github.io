@@ -18,8 +18,7 @@ export const profile = {
     'My research sits where machine learning meets health and biology: I care about ' +
     'models that are reliable and interpretable enough to inform real decisions.',
   now: 'Bayesian optimisers for foundation models in biology',
-  // TODO: confirm which email to show (Mila or Polytechnique).
-  email: 'antoine.lafrance@polymtl.ca',
+  email: 'antoine.lafrance@mila.quebec',
   links: [
     { label: 'GitHub', href: 'https://github.com/antoine-lafrance' },
     { label: 'LinkedIn', href: 'https://www.linkedin.com/in/antoine-lafrance' },
@@ -130,7 +129,7 @@ export const tracks = [
     org: 'Polytechnique Montréal',
     start: '2022.09',
     end: '2026.04',
-    note: 'GPA 3.98.',
+    note: 'GPA 3.97.',
   },
   {
     title: 'Software Engineering Intern',
@@ -196,7 +195,7 @@ export const slides: Slide[] = [
     track: 1,
     image: gradImg,
     alt: 'Antoine in graduation gown holding a Polytechnique Montréal diploma',
-    caption: 'Graduation! B.Eng. in Software Engineering from Polytechnique Montréal, GPA 3.98.',
+    caption: 'Graduation! B.Eng. in Software Engineering from Polytechnique Montréal, GPA 3.97.',
   },
   {
     track: 5,
@@ -218,13 +217,9 @@ export const awards = [
   },
   {
     group: 'Academic',
-    items: ['GPA 3.98, B.Eng. Software Engineering, Polytechnique Montréal'],
+    items: ['GPA 3.97, B.Eng. Software Engineering, Polytechnique Montréal'],
   },
 ];
-
-export const beyondIntro =
-  'Outside the lab, I like putting technical skills to work in interdisciplinary settings, ' +
-  'working with very different partners, and giving back to my community.';
 
 export type Card = {
   title: string;
@@ -232,6 +227,8 @@ export type Card = {
   date: string;
   text: string;
   pin?: string;
+  /** optional link to the project, shown on its achievement card */
+  link?: { label: string; href: string };
 };
 
 export const competitions: Card[] = [
@@ -250,8 +247,12 @@ export const competitions: Card[] = [
   {
     title: 'PolyAI CodeML',
     tag: 'Winner',
-    date: '2022 — 2024',
-    text: 'Models for quantum computing and biology; flood prediction from real-time precipitation and topography data.',
+    date: '2022 — 2024, 2026',
+    text:
+      'Models for quantum computing and biology; flood prediction from real-time precipitation and topography data. ' +
+      'In 2026 I took part again and won with a tool that scans recycled lenses and 3D-prints custom frames for them: ' +
+      'it was used in Mali to make over 1,000 pairs of glasses for children in need, with Santé numérique sans frontières.',
+    link: { label: 'See the 2026 glasses tool', href: 'https://glasses-eta.vercel.app/' },
   },
   {
     title: 'Polyfinances Datathon',
@@ -272,7 +273,7 @@ export const leadership: Card[] = [
     title: 'PolyMonde',
     tag: 'Head of Fundraising',
     date: 'Sept 2025 — 2027',
-    text: 'Polytechnique’s oldest student committee. I build corporate partnerships and fund the committee’s initiatives, and visited 40+ AI companies across three countries.',
+    text: 'Polytechnique’s oldest student committee. I build corporate partnerships and fund the committee’s initiatives, and visited 80+ companies with research focuses ranging from AI to critical minerals, across three countries.',
   },
   {
     title: 'CCGP',
