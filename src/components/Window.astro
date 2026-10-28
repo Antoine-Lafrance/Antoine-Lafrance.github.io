@@ -1,0 +1,451 @@
+---
+// A desktop-style window: blue title bar, optional menu/address bars, body,
+// optional status bar. Minimize folds the body, maximize widens it,
+// close removes the window until it is reopened.
+import Icon, { type IconName } from './Icon.astro';
+
+interface Props {
+  id: string;
+  title: string;
+  icon: IconName;
+  /** true for the standard explorer menu, or a custom list of menu names */
+  menu?: boolean | string[];
+  /** explorer toolbar (Back, Forward, Up, Search, Folders) */
+  toolbar?: boolean;
+  address?: string;
+  width?: 'full' | 'dialog';
+  /** no padding around the content, for app-like layouts */
+  flush?: boolean;
+  headingLevel?: 'h1' | 'h2';
+}
+const {
+  id,
+  title,
+  icon,
+  menu = false,
+  toolbar = false,
+  address,
+  width = 'full',
+  flush = false,
+  headingLevel = 'h2',
+} = Astro.props;
+const Heading = headingLevel;
+const hasStatus = Astro.slots.has('status');
+const menuItems = Array.isArray(menu)
+  ? menu
+  : menu
+    ? ['File', 'Edit', 'View', 'Favorites', 'Tools', 'Help']
+    : [];
+---
+
+<section id={id} class:list={['window', `window--${width}`]} aria-labelledby={`${id}-title`}>
+  <header class="window__bar">
+    <Icon name={icon} size={16} />
+    <Heading class="window__title" id={`${id}-title`}>{title}</Heading>
+    <div class="window__controls">
+      <button type="button" class="ctl ctl--min" data-win="min" aria-label={`Minimize ${title}`} aria-expanded="true" aria-controls={`${id}-body`}></button>
+      <button type="button" class="ctl ctl--max" data-win="max" aria-label={`Maximize ${title}`}></button>
+      <button type="button" class="ctl ctl--close" data-win="close" aria-label={`Close ${title}`}></button>
+    </div>
+  </header>
+
+  <div class="window__body" id={`${id}-body`}>
+    {menuItems.length > 0 && (
+      <div class="window__menu" aria-hidden="true">
+        {menuItems.map((m) => <span>{m}</span>)}
+      </div>
+    )}
+    {toolbar && (
+      <div class="window__toolbar" aria-hidden="true">
+        <span class="tb tb--nav"><span class="tb__arrow tb__arrow--back"></span>Back</span>
+        <span class="tb tb--nav tb--off"><span class="tb__arrow"></span></span>
+        <span class="tb"><Icon name="folder" size={20} /></span>
+        <span class="tb__sep"></span>
+        <span class="tb"><span class="tb__search"></span>Search</span>
+        <span class="tb tb--on"><Icon name="folder" size={20} />Folders</span>
+      </div>
+    )}
+    {address && (
+      <div class="window__address" aria-hidden="true">
+        <span class="window__address-label">Address</span>
+        <span class="window__address-field"><Icon name="folder" size={16} /><span data-address>{address}</span></span>
+      </div>
+    )}
+    <div class:list={['window__content', { 'window__content--flush': flush }]}>
+      <slot />
+    </div>
+    {hasStatus && (
+      <footer class="window__status">
+        <slot name="status" />
+      </footer>
+    )}
+  </div>
+</section>
+
+<script>
+  const windows = [...document.querySelectorAll<HTMLElement>('.window')];
+  // Dragging only on desktop-sized screens with a mouse/trackpad.
+  const canDrag = matchMedia('(pointer: fine) and (min-width: 821px)');
+
+  const setCollapsed = (win: HTMLElement, collapsed: boolean) => {
+    win.classList.toggle('is-collapsed', collapsed);
+    win.querySelector('[data-win="min"]')?.setAttribute('aria-expanded', String(!collapsed));
+  };
+
+  // Closing removes the window and its taskbar button until it is opened
+  // again from the Start menu, a desktop icon or a link (or the page reloads).
+  const taskButton = (win: HTMLElement) =>
+    document.querySelector(`[data-task="${win.id}"]`)?.closest('li') as HTMLElement | null;
+  const closeWindow = (win: HTMLElement) => {
+    win.hidden = true;
+    const task = taskButton(win);
+    if (task) task.hidden = true;
+    // Keyboard focus would otherwise be lost with the window.
+    document.querySelector<HTMLElement>('.start')?.focus();
+  };
+  const openWindow = (win: HTMLElement) => {
+    win.hidden = false;
+    const task = taskButton(win);
+    if (task) task.hidden = false;
+    setCollapsed(win, false);
+    resetPosition(win);
+    win.classList.remove('is-max');
+  };
+
+  // Offsets from each window's place in the page flow.
+  const offset = new Map<HTMLElement, { x: number; y: number }>();
+  const moveTo = (win: HTMLElement, x: number, y: number) => {
+    offset.set(win, { x, y });
+    win.style.translate = x || y ? `${x}px ${y}px` : '';
+  };
+  const resetPosition = (win: HTMLElement) => moveTo(win, 0, 0);
+
+  // Stacking: the last window touched is on top.
+  const stack = [...windows];
+  const bringToFront = (win: HTMLElement) => {
+    stack.splice(stack.indexOf(win), 1);
+    stack.push(win);
+    stack.forEach((w, i) => (w.style.zIndex = String(2 + i)));
+    windows.forEach((w) => w.classList.toggle('is-inactive', w !== win));
+  };
+
+  windows.forEach((win) => {
+    win.querySelectorAll<HTMLButtonElement>('[data-win]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const action = btn.dataset.win;
+        if (action === 'max') {
+          resetPosition(win);
+          if (win.classList.contains('is-collapsed')) setCollapsed(win, false);
+          else win.classList.toggle('is-max');
+        } else if (action === 'close') {
+          closeWindow(win);
+        } else {
+          setCollapsed(win, !win.classList.contains('is-collapsed'));
+        }
+      });
+    });
+
+    const bar = win.querySelector<HTMLElement>('.window__bar')!;
+
+    // Double-clicking the title bar maximizes and snaps it back in place.
+    bar.addEventListener('dblclick', (e) => {
+      if ((e.target as Element).closest('button')) return;
+      resetPosition(win);
+      win.classList.toggle('is-max');
+    });
+
+    win.addEventListener('pointerdown', () => bringToFront(win));
+
+    bar.addEventListener('pointerdown', (e) => {
+      if (!canDrag.matches || e.button !== 0 || (e.target as Element).closest('button')) return;
+      e.preventDefault();
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const start = offset.get(win) ?? { x: 0, y: 0 };
+      const rect = win.getBoundingClientRect();
+      const taskbar = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--taskbar-h')) || 34;
+      bar.setPointerCapture(e.pointerId);
+      win.classList.add('is-dragging');
+
+      const onMove = (ev: PointerEvent) => {
+        // Keep at least part of the title bar on screen, like the real OS.
+        const dx = Math.min(innerWidth - 80 - rect.left, Math.max(80 - rect.right, ev.clientX - startX));
+        const dy = Math.min(innerHeight - taskbar - 30 - rect.top, Math.max(-rect.top, ev.clientY - startY));
+        moveTo(win, start.x + dx, start.y + dy);
+      };
+      const onUp = () => {
+        win.classList.remove('is-dragging');
+        bar.removeEventListener('pointermove', onMove);
+        bar.removeEventListener('pointerup', onUp);
+        bar.removeEventListener('pointercancel', onUp);
+      };
+      bar.addEventListener('pointermove', onMove);
+      bar.addEventListener('pointerup', onUp);
+      bar.addEventListener('pointercancel', onUp);
+    });
+  });
+
+  // On small screens there is no dragging: put everything back.
+  canDrag.addEventListener('change', () => {
+    if (!canDrag.matches) windows.forEach(resetPosition);
+  });
+
+  // Jumping to a window (taskbar, Start menu, desktop icons, links) reopens
+  // it if closed, unfolds it, returns it to its place and brings it forward.
+  document.addEventListener('click', (e) => {
+    const link = (e.target as Element).closest<HTMLAnchorElement>('a[href*="#"]');
+    if (!link) return;
+    const id = link.hash.slice(1);
+    const win = id && document.getElementById(id);
+    if (win && win.classList.contains('window')) {
+      if (win.hidden) openWindow(win);
+      else {
+        setCollapsed(win, false);
+        resetPosition(win);
+      }
+      bringToFront(win);
+    }
+  });
+</script>
+
+<style>
+  .window {
+    --win-max: 100%;
+    position: relative;
+    width: 100%;
+    max-width: var(--win-max);
+    justify-self: center;
+    padding: 0 3px 3px;
+    border-radius: 8px 8px 0 0;
+    background: var(--titlebar);
+    background-size: 100% 30px;
+    background-repeat: no-repeat;
+    background-color: var(--frame);
+    box-shadow: 4px 6px 14px rgba(0, 0, 0, 0.35), inset 0 0 0 1px var(--frame-dark);
+    transition: max-width 0.25s ease, translate 0.2s ease;
+  }
+  .window.is-dragging {
+    transition: none;
+  }
+  .window--dialog {
+    --win-max: 680px;
+  }
+  .window.is-max {
+    --win-max: 100%;
+  }
+
+  .window__bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 3px 0 6px;
+    user-select: none;
+  }
+  @media (pointer: fine) and (min-width: 821px) {
+    .window__bar {
+      touch-action: none;
+    }
+  }
+  .window.is-dragging {
+    box-shadow: 8px 12px 24px rgba(0, 0, 0, 0.45), inset 0 0 0 1px var(--frame-dark);
+  }
+  .window.is-dragging .window__body {
+    pointer-events: none;
+  }
+  /* Unfocused windows get the paler title bar */
+  .window.is-inactive {
+    background-image: linear-gradient(180deg, #7a96df 0%, #6582d6 10%, #7d99e2 90%, #6d89da 100%);
+    background-color: #7a96df;
+  }
+  .window.is-inactive .window__title {
+    color: #d8e4f8;
+    text-shadow: none;
+  }
+  .window__title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    color: #fff;
+    font: bold 13px var(--font-title);
+    letter-spacing: 0.01em;
+    text-overflow: ellipsis;
+    text-shadow: 1px 1px #0f1089;
+    white-space: nowrap;
+  }
+
+  .window__controls {
+    display: flex;
+    gap: 2px;
+  }
+  .ctl {
+    position: relative;
+    width: 21px;
+    height: 21px;
+    padding: 0;
+    border: 1px solid #fff;
+    border-radius: 3px;
+    background: radial-gradient(circle at 90% 90%, #0054e9 0%, #2263d5 55%, #4479e4 70%, #a3bbec 90%, #fff 100%);
+    cursor: pointer;
+  }
+  .ctl:hover {
+    filter: brightness(1.15);
+  }
+  .ctl:active {
+    filter: brightness(0.85);
+  }
+  .ctl::before,
+  .ctl::after {
+    content: '';
+    position: absolute;
+  }
+  .ctl--min::before {
+    left: 4px;
+    bottom: 4px;
+    width: 7px;
+    height: 3px;
+    background: #fff;
+  }
+  .ctl--max::before {
+    inset: 3px;
+    border: 1px solid #fff;
+    border-top-width: 3px;
+  }
+  .ctl--close {
+    background: radial-gradient(circle at 90% 90%, #cc4600 0%, #dc6527 55%, #cd7546 70%, #ffccb2 90%, #fff 100%);
+  }
+  .ctl--close::before,
+  .ctl--close::after {
+    left: 8.5px;
+    top: 3px;
+    width: 2px;
+    height: 13px;
+    background: #fff;
+    transform: rotate(45deg);
+  }
+  .ctl--close::after {
+    transform: rotate(-45deg);
+  }
+
+  .window__body {
+    background: var(--face);
+  }
+  .window[hidden] {
+    display: none;
+  }
+  .window.is-collapsed .window__body {
+    display: none;
+  }
+  .window.is-collapsed {
+    padding-bottom: 0;
+    border-radius: 8px;
+  }
+
+  .window__menu {
+    display: flex;
+    gap: 2px;
+    padding: 2px 4px;
+    border-bottom: 1px solid #d6d2c2;
+    font-size: 12px;
+  }
+  .window__menu span {
+    padding: 1px 6px;
+  }
+  .window__address {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px;
+    border-bottom: 1px solid #d6d2c2;
+    font-size: 12px;
+  }
+  .window__address-label {
+    color: var(--text-dim);
+  }
+  .window__address-field {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    padding: 2px 4px;
+    border: 1px solid #7f9db9;
+    background: #fff;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .window__toolbar {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 4px;
+    border-bottom: 1px solid #d6d2c2;
+    font-size: 12px;
+  }
+  .tb {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+  }
+  .tb--on {
+    border: 1px solid;
+    border-color: #a5a092 #fff #fff #a5a092;
+    border-radius: 3px;
+    background: #e3e1d3;
+  }
+  .tb--off {
+    opacity: 0.45;
+  }
+  .tb__arrow {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #c6f2b8, #3c9a2e 70%);
+    box-shadow: inset 0 0 0 1px #2c7a22;
+  }
+  .tb__arrow::after {
+    content: '';
+    border: 5px solid transparent;
+    border-left: 7px solid #fff;
+    margin-left: 4px;
+  }
+  .tb__arrow--back::after {
+    border-left: 0;
+    border-right: 7px solid #fff;
+    margin: 0 4px 0 0;
+  }
+  .tb__search {
+    width: 14px;
+    height: 14px;
+    border: 2px solid #3264a8;
+    border-radius: 50%;
+    background: #e8f2ff;
+  }
+  .tb__sep {
+    width: 1px;
+    height: 22px;
+    margin: 0 4px;
+    background: #c5c2b2;
+  }
+
+  .window__content {
+    padding: clamp(14px, 2.5vw, 22px);
+  }
+  .window__content--flush {
+    padding: 0;
+  }
+
+  .window__status {
+    display: flex;
+    gap: 12px;
+    padding: 3px 8px;
+    border-top: 1px solid #d6d2c2;
+    background: var(--face);
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+</style>

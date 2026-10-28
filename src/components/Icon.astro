@@ -1,0 +1,63 @@
+---
+// Desktop icons, stored in public/icons/. Most are from the Crystal Clear set
+// by Everaldo Coelho (LGPL); the cone is the VLC icon by Richard Øiestad
+// (GPL), both via Wikimedia Commons. The progress dialog is drawn as SVG.
+export type IconName =
+  | 'user'
+  | 'folder'
+  | 'document'
+  | 'text'
+  | 'notepad'
+  | 'desktop'
+  | 'globe'
+  | 'mail'
+  | 'people'
+  | 'medal'
+  | 'progress'
+  | 'cone';
+
+interface Props {
+  name: IconName;
+  size?: number;
+}
+const { name, size = 32 } = Astro.props;
+
+const files: Partial<Record<IconName, string>> = {
+  user: 'user.svg',
+  folder: 'folder.png',
+  document: 'pdf.png',
+  text: 'text.png',
+  notepad: 'notepad.png',
+  desktop: 'desktop.png',
+  globe: 'globe.png',
+  mail: 'mail.png',
+  people: 'people.png',
+  medal: 'star.png',
+  cone: 'vlc.png',
+};
+const file = files[name];
+const src = file && `${import.meta.env.BASE_URL}icons/${file}`;
+---
+
+{src ? (
+  <img class="icon" src={src} width={size} height={size} alt="" aria-hidden="true" decoding="async" />
+) : (
+  <svg class="icon" width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
+    {name === 'progress' && (
+      <>
+        <rect x="3" y="6" width="26" height="20" rx="2" fill="#ece9d8" stroke="#0831d9" />
+        <rect x="3" y="6" width="26" height="5" fill="#2468e8" />
+        <rect x="6" y="17" width="20" height="5" fill="#fff" stroke="#686868" />
+        <g fill="#33c433"><rect x="7" y="18" width="3" height="3" /><rect x="11" y="18" width="3" height="3" /><rect x="15" y="18" width="3" height="3" /></g>
+      </>
+    )}
+  </svg>
+)}
+
+<style>
+  .icon {
+    flex: none;
+    display: block;
+    object-fit: contain;
+  }
+</style>

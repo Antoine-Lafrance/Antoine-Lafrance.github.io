@@ -1,0 +1,51 @@
+---
+import '../styles/global.css';
+import Wallpaper from '../components/Wallpaper.astro';
+import Taskbar from '../components/Taskbar.astro';
+import DesktopIcons from '../components/DesktopIcons.astro';
+import Welcome from '../components/Welcome.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  /** show the mock welcome screen on the first visit of a session */
+  welcome?: boolean;
+}
+const { title, description, welcome = false } = Astro.props;
+const base = import.meta.env.BASE_URL;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#245edb" />
+    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+    {welcome && (
+      <script is:inline>
+        // Decide before first paint, so the desktop never flashes behind it.
+        try {
+          if (!sessionStorage.getItem('welcomed')) document.documentElement.dataset.welcome = '';
+        } catch {
+          document.documentElement.dataset.welcome = '';
+        }
+      </script>
+    )}
+  </head>
+  <body>
+    {welcome && <Welcome />}
+    <a class="skip-link" href="#main">Skip to content</a>
+    <Wallpaper />
+    <DesktopIcons />
+    <main id="main">
+      <slot />
+    </main>
+    <Taskbar />
+  </body>
+</html>

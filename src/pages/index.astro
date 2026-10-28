@@ -1,0 +1,528 @@
+---
+import Base from '../layouts/Base.astro';
+import Window from '../components/Window.astro';
+import Icon from '../components/Icon.astro';
+import ResearchExplorer from '../components/ResearchExplorer.astro';
+import MediaPlayer from '../components/MediaPlayer.astro';
+import Platformer from '../components/Platformer.astro';
+import { Image } from 'astro:assets';
+import { photo, photoFocus } from '../data/photo';
+import {
+  profile,
+  orgLinks,
+  currentWork,
+  awards,
+  competitions,
+} from '../data/content';
+
+const base = import.meta.env.BASE_URL;
+
+// Awards.txt: scholarships and academic, then competition results.
+const awardGroups = [
+  ...awards,
+  {
+    group: 'Competitions',
+    items: competitions.filter((c) => c.tag).map((c) => `${c.tag}: ${c.title} (${c.date})`),
+  },
+];
+
+// Build-time snapshot of M.Sc. progress; the script below keeps it live.
+const msStart = Date.parse(currentWork.start);
+const msEnd = Date.parse(currentWork.end);
+const builtPct = Math.min(100, Math.max(0, ((Date.now() - msStart) / (msEnd - msStart)) * 100));
+---
+
+<Base
+  title="Antoine Lafrance · Mila"
+  description="Antoine Lafrance: M.Sc. student at Mila – Quebec AI Institute (Chandar Lab), working on machine learning for health and biology."
+  welcome
+>
+  <!-- 01 — About me: a user-account style window -->
+  <Window id="intro" title="Antoine Lafrance – About Me" icon="user" headingLevel="h1">
+    <div class="about">
+      <aside class="about__side">
+        <figure class="about__pic">
+          {photo ? (
+            <Image
+              class="about__pic-img"
+              src={photo}
+              alt="Portrait of Antoine Lafrance"
+              width={320}
+              loading="eager"
+              style={`object-position: ${photoFocus}`}
+            />
+          ) : (
+            <div class="about__pic-img" role="img" aria-label="Portrait placeholder">
+              <Icon name="user" size={72} />
+            </div>
+          )}
+        </figure>
+        <ul class="about__facts" role="list">
+          <li><a href={orgLinks.mila}>Mila – Quebec AI Institute</a></li>
+          <li><a href={orgLinks.chandarLab}>Chandar Lab</a></li>
+          <li><a href={orgLinks.poly}>Polytechnique Montréal</a></li>
+          <li>Montréal, QC</li>
+        </ul>
+      </aside>
+      <div class="about__main">
+        <p class="about__name">{profile.name}</p>
+        <p class="about__role">{profile.role}</p>
+        <p class="about__intro">{profile.intro}</p>
+        <p class="about__now">
+          <span class="about__now-label">Now:</span>{' '}
+          <a href="#now">{profile.now}</a>
+        </p>
+        <p class="about__buttons">
+          <a class="button button--default" href={`mailto:${profile.email}`}>E-mail me</a>
+          {profile.links.map((l) => <a class="button" href={l.href}>{l.label}</a>)}
+          <a class="button" href={profile.cv}>My CV</a>
+        </p>
+      </div>
+    </div>
+  </Window>
+
+  <!-- 02 — Current work: a progress dialog -->
+  <Window id="now" title="Current Work – In progress..." icon="progress" width="dialog">
+    <div class="job">
+      <div class="job__anim" aria-hidden="true">
+        <Icon name="document" size={36} />
+        <span class="job__flight"><span></span><span></span><span></span></span>
+        <Icon name="folder" size={36} />
+      </div>
+      <p class="job__label">Optimising:</p>
+      <h3 class="job__title">{currentWork.title}</h3>
+      <p class="job__meta">From: {currentWork.meta.join(' · ')}</p>
+      <div
+        class="progress job__bar"
+        role="progressbar"
+        aria-label="M.Sc. progress"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow={builtPct.toFixed(1)}
+        data-start={msStart}
+        data-end={msEnd}
+      >
+        <span style={`width: ${builtPct}%`}></span>
+      </div>
+      <p class="job__meta job__stats">
+        <span><strong data-pct>{builtPct.toFixed(5)}%</strong> of my M.Sc. complete</span>
+        <span data-left></span>
+      </p>
+      <p class="job__meta">Started: September 2026 · Estimated completion: April 2028</p>    </div>
+  </Window>
+
+  <!-- 03 — Research: a file explorer -->
+  <ResearchExplorer />
+
+  <!-- 04 — Experience: a media player -->
+  <MediaPlayer />
+
+  <!-- 05 — Awards: a plain text file in Notepad -->
+  <Window
+    id="awards"
+    title="Awards.txt – Notepad"
+    icon="notepad"
+    width="dialog"
+    menu={['File', 'Edit', 'Format', 'View', 'Help']}
+    flush
+  >
+    <div class="notepad">
+      <p class="notepad__line">AWARDS</p>
+      <p class="notepad__line" aria-hidden="true">======</p>
+      {awardGroups.map((g) => (
+        <section class="notepad__group">
+          <h3 class="notepad__line">{g.group}</h3>
+          <p class="notepad__line" aria-hidden="true">{'-'.repeat(g.group.length)}</p>
+          <ul role="list">
+            {g.items.map((item) => <li class="notepad__line">* {item}</li>)}
+          </ul>
+        </section>
+      ))}
+      <span class="notepad__caret" aria-hidden="true"></span>
+    </div>
+  </Window>
+
+  <!-- 06 — Beyond research: a pixel-art platformer -->
+  <Platformer />
+
+  <!-- 07 — Contact: a new-message window + blog inbox -->
+  <Window id="contact" title="New Message" icon="mail">
+    <div class="mail">
+      <div class="mail__toolbar">
+        <a class="mail__send" href={`mailto:${profile.email}?subject=Hello%20Antoine`}>
+          <Icon name="mail" size={28} />
+          <span>Send</span>
+        </a>
+        {profile.links.map((l) => (
+          <a class="mail__tool" href={l.href}>
+            <Icon name="globe" size={28} />
+            <span>{l.label}</span>
+          </a>
+        ))}
+      </div>
+      <dl class="mail__fields">
+        <div><dt>To:</dt><dd><a href={`mailto:${profile.email}`}>{profile.email}</a></dd></div>
+        <div><dt>Subject:</dt><dd>Hello Antoine!</dd></div>
+      </dl>
+      <div class="mail__body">
+        <p>Want to talk research, collaborations or anything else? Click <strong>Send</strong> or write to me directly. I read everything.</p>
+      </div>
+
+      <h3 class="group-head">Latest blog posts</h3>
+      <div class="inbox">
+        <p class="inbox__head"><span>Subject</span><span>Received</span></p>
+        <p class="inbox__empty"><span>No posts yet. The first one is on its way.</span></p>
+      </div>
+      <p class="mail__more"><a class="button" href={`${base}blog/`}>Open Blog</a></p>
+    </div>
+  </Window>
+
+  <footer class="footer">
+    © {new Date().getFullYear()} Antoine Lafrance · Built in Montréal · Wallpaper:
+    <a href="https://unsplash.com/photos/green-grass-field-under-blue-sky--nYBR0LFTvQ">Chris Barbalis / Unsplash</a>
+    · Icons: <a href="https://commons.wikimedia.org/wiki/Crystal_Clear">Crystal Clear</a> by Everaldo Coelho
+    (<a href="https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html">LGPL</a>)
+    · <a href="https://commons.wikimedia.org/wiki/File:VLC_Icon.svg">VLC icon</a> by Richard Øiestad
+    (<a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html">GPL</a>)
+  </footer>
+</Base>
+
+<script>
+  // M.Sc. progress bar, updated every second
+  const bar = document.querySelector<HTMLElement>('.job__bar')!;
+  const fill = bar.querySelector('span')!;
+  const pctEl = document.querySelector('[data-pct]')!;
+  const leftEl = document.querySelector('[data-left]')!;
+  const start = Number(bar.dataset.start);
+  const end = Number(bar.dataset.end);
+  const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`;
+  const remaining = (ms: number) => {
+    const days = Math.floor(ms / 86_400_000);
+    const months = Math.floor(days / 30.44);
+    if (months >= 12) return `${plural(Math.floor(months / 12), 'year')}, ${plural(months % 12, 'month')}`;
+    if (months >= 1) return `${plural(months, 'month')}, ${plural(Math.floor(days - months * 30.44), 'day')}`;
+    return plural(days, 'day');
+  };
+  const update = () => {
+    const now = Date.now();
+    const pct = Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100));
+    fill.style.width = `${pct}%`;
+    bar.setAttribute('aria-valuenow', pct.toFixed(1));
+    pctEl.textContent = `${pct.toFixed(5)}%`;
+    leftEl.textContent =
+      now < start ? 'Not started yet' : now >= end ? 'Done!' : `About ${remaining(end - now)} remaining`;
+  };
+  update();
+  setInterval(update, 1000);
+
+</script>
+
+<style>
+  /* 01 — About me */
+  .about {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 24px;
+  }
+  .about__side {
+    padding: 16px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, var(--pane-top), var(--pane-bottom));
+    color: #fff;
+  }
+  .about__pic {
+    margin: 0 auto 16px;
+    width: 140px;
+    padding: 4px;
+    border: 2px solid #fff;
+    border-radius: 6px;
+    background: #fff;
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.35);
+  }
+  .about__pic-img {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 3px;
+    background: linear-gradient(160deg, #d8e6fb, #9ab8ec);
+  }
+  .about__facts {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+  }
+  .about__facts li {
+    padding: 3px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+  }
+  .about__facts a {
+    color: #fff;
+  }
+  .about__name {
+    color: #0a246a;
+    font: bold clamp(26px, 4vw, 36px) var(--font-title);
+  }
+  .about__role {
+    margin: 2px 0 14px;
+    color: var(--group-blue);
+    font-weight: bold;
+  }
+  .about__intro {
+    max-width: 62ch;
+  }
+  .about__now {
+    margin-top: 14px;
+    padding: 8px 10px;
+    border: 1px solid #000;
+    border-radius: 4px;
+    background: #ffffe1;
+  }
+  .about__now-label {
+    font-weight: bold;
+  }
+  .about__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+  }
+
+  /* 02 — Progress dialog */
+  .job {
+    font-size: 14px;
+  }
+  .job__anim {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .job__flight {
+    display: flex;
+    flex: 1;
+    justify-content: space-around;
+  }
+  .job__flight span {
+    width: 14px;
+    height: 10px;
+    border: 1px solid #6b7a90;
+    background: #fff;
+    animation: fly 2.4s linear infinite;
+  }
+  .job__flight span:nth-child(2) {
+    animation-delay: 0.8s;
+  }
+  .job__flight span:nth-child(3) {
+    animation-delay: 1.6s;
+  }
+  @keyframes fly {
+    0% {
+      opacity: 0;
+      transform: translate(-40px, 8px);
+    }
+    30%,
+    70% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translate(40px, -8px);
+    }
+  }
+  .job__label {
+    color: var(--text-dim);
+  }
+  .job__title {
+    margin: 2px 0 4px;
+    font: bold 18px var(--font-title);
+    color: #0a246a;
+  }
+  .job__meta {
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+  .job__bar {
+    margin: 12px 0 6px;
+  }
+  .job__stats {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 16px;
+  }
+  .job__stats strong {
+    color: #000;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 05 — Notepad */
+  .notepad {
+    min-height: 260px;
+    padding: 6px 8px 18px;
+    border: 1px solid;
+    border-color: #7f9db9;
+    background: #fff;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+  }
+  .notepad__line {
+    margin: 0;
+    font: inherit;
+  }
+  .notepad__group {
+    margin-top: 1.55em;
+  }
+  .notepad ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .notepad li {
+    padding-left: 2ch;
+    text-indent: -2ch;
+  }
+  .notepad__caret {
+    display: inline-block;
+    width: 1px;
+    height: 1.1em;
+    margin-top: 1.55em;
+    background: #000;
+    vertical-align: text-bottom;
+    animation: caret 1.06s steps(1) infinite;
+  }
+  @keyframes caret {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  /* 07 — Mail */
+  .mail__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: calc(-1 * clamp(14px, 2.5vw, 22px)) calc(-1 * clamp(14px, 2.5vw, 22px)) 14px;
+    padding: 6px 10px;
+    border-bottom: 1px solid #d6d2c2;
+  }
+  .mail__send,
+  .mail__tool {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 64px;
+    padding: 4px 8px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    color: #000;
+    font-size: 12px;
+    text-decoration: none;
+  }
+  .mail__send:hover,
+  .mail__tool:hover {
+    border-color: #ccc #888 #888 #ccc;
+    background: #fff;
+    color: #000;
+  }
+  .mail__send {
+    font-weight: bold;
+  }
+  .mail__fields {
+    display: grid;
+    gap: 6px;
+    margin: 0 0 10px;
+  }
+  .mail__fields div {
+    display: grid;
+    grid-template-columns: 70px 1fr;
+    align-items: center;
+  }
+  .mail__fields dt {
+    font-size: 13px;
+  }
+  .mail__fields dd {
+    margin: 0;
+    padding: 2px 6px;
+    border: 1px solid #7f9db9;
+    background: #fff;
+    font-size: 14px;
+  }
+  .mail__body {
+    min-height: 110px;
+    padding: 10px 12px;
+    border: 1px solid #7f9db9;
+    background: #fff;
+  }
+  .inbox {
+    border: 1px solid #7f9db9;
+    background: #fff;
+    font-size: 13px;
+  }
+  .inbox__head {
+    display: grid;
+    grid-template-columns: 1fr 140px;
+    border-bottom: 1px solid #d6d2c2;
+    background: linear-gradient(180deg, #fff, #ebeadb);
+  }
+  .inbox__head span {
+    padding: 3px 8px;
+    border-right: 1px solid #d6d2c2;
+  }
+  .inbox__empty {
+    padding: 10px 8px;
+    color: var(--text-dim);
+  }
+  .mail__more {
+    margin-top: 12px;
+  }
+
+  .footer {
+    color: #fff;
+    font-size: 12px;
+    text-align: center;
+    text-shadow: 1px 1px 2px #000;
+  }
+  .footer a {
+    color: #fff;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .notepad__caret,
+    .job__flight span {
+      animation: none;
+    }
+  }
+
+  /* Responsive */
+  @media (max-width: 820px) {
+    .about {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .about__side {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+    .about__pic {
+      flex: none;
+      width: 96px;
+      margin: 0;
+    }
+  }
+  @media (max-width: 520px) {
+    .about__side {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .about__pic {
+      margin: 0 auto;
+    }
+  }
+</style>

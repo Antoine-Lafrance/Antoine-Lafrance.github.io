@@ -1,0 +1,386 @@
+---
+// Bottom taskbar: Start button + menu, one button per window, clock.
+import Icon from './Icon.astro';
+import { Image } from 'astro:assets';
+import { profile, sections } from '../data/content';
+import { photo, photoFocus } from '../data/photo';
+
+const base = import.meta.env.BASE_URL;
+const home = (id: string) => `${base}#${id}`;
+---
+
+<div class="taskbar" role="navigation" aria-label="Main">
+  <button class="start" type="button" aria-expanded="false" aria-controls="start-menu">
+    <span class="start__logo" aria-hidden="true"></span>
+    <span>start</span>
+  </button>
+
+  <ul class="tasks" role="list">
+    {sections.map((s) => (
+      <li>
+        <a class="task" href={home(s.id)} data-task={s.id}>
+          <Icon name={s.icon} size={16} />
+          <span>{s.label}</span>
+        </a>
+      </li>
+    ))}
+    <li>
+      <a class="task" href={`${base}blog/`} data-task="blog">
+        <Icon name="notepad" size={16} />
+        <span>Blog</span>
+      </a>
+    </li>
+  </ul>
+
+  <div class="tray">
+    <span class="tray__place">Montréal</span>
+    <time data-clock>--:--</time>
+  </div>
+</div>
+
+<div class="start-menu" id="start-menu" hidden>
+  <div class="start-menu__head">
+    <span class="start-menu__pic">
+      {photo ? (
+        <Image src={photo} alt="" width={96} style={`object-position: ${photoFocus}`} />
+      ) : (
+        <Icon name="user" size={36} />
+      )}
+    </span>
+    <span>{profile.name}</span>
+  </div>
+  <div class="start-menu__body">
+    <ul class="start-menu__left" role="list">
+      {sections.map((s) => (
+        <li>
+          <a href={home(s.id)}>
+            <Icon name={s.icon} size={28} />
+            <span>{s.label}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+    <ul class="start-menu__right" role="list">
+      <li>
+        <a href={`${base}blog/`}><Icon name="notepad" size={22} /><span>Blog</span></a>
+      </li>
+      <li>
+        <a href={profile.cv}><Icon name="document" size={22} /><span>My CV</span></a>
+      </li>
+      <li class="start-menu__sep" aria-hidden="true"></li>
+      {profile.links.map((l) => (
+        <li>
+          <a href={l.href}><Icon name="globe" size={22} /><span>{l.label}</span></a>
+        </li>
+      ))}
+      <li>
+        <a href={`mailto:${profile.email}`}><Icon name="mail" size={22} /><span>E-mail me</span></a>
+      </li>
+    </ul>
+  </div>
+  <div class="start-menu__foot">
+    <button class="start-menu__logoff" type="button" data-logoff>
+      <span class="start-menu__key" aria-hidden="true">
+        <svg viewBox="0 0 16 16"><circle cx="5" cy="8" r="3" /><path d="M7.5 7h7v2h-1.5v2h-2V9H7.5z" /></svg>
+      </span>
+      Log Off
+    </button>
+  </div>
+</div>
+
+<script>
+  // Start menu
+  const startBtn = document.querySelector<HTMLButtonElement>('.start')!;
+  const menu = document.getElementById('start-menu')!;
+  const setOpen = (open: boolean) => {
+    menu.hidden = !open;
+    startBtn.setAttribute('aria-expanded', String(open));
+    startBtn.classList.toggle('is-pressed', open);
+  };
+  startBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setOpen(menu.hidden);
+  });
+  menu.addEventListener('click', (e) => {
+    if ((e.target as Element).closest('a')) setOpen(false);
+  });
+  document.addEventListener('click', (e) => {
+    if (!menu.hidden && !menu.contains(e.target as Node)) setOpen(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !menu.hidden) {
+      setOpen(false);
+      startBtn.focus();
+    }
+  });
+
+  // Log Off: back to the welcome screen. It only exists on the home page,
+  // so elsewhere we go home and let the page show it on load.
+  menu.querySelector('[data-logoff]')!.addEventListener('click', () => {
+    setOpen(false);
+    try {
+      sessionStorage.removeItem('welcomed');
+    } catch {}
+    if (document.querySelector('.welcome')) {
+      document.dispatchEvent(new CustomEvent('welcome:show'));
+    } else {
+      location.href = import.meta.env.BASE_URL;
+    }
+  });
+
+  // Montréal clock
+  const clock = document.querySelector('[data-clock]')!;
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Toronto',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+  const tick = () => (clock.textContent = fmt.format(new Date()));
+  tick();
+  setInterval(tick, 30000);
+
+  // Highlight the taskbar button of the window in view
+  const tasks = document.querySelectorAll<HTMLElement>('[data-task]');
+  const windows = document.querySelectorAll<HTMLElement>('main > [id]');
+  if (windows.length && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          tasks.forEach((t) => t.classList.toggle('is-active', t.dataset.task === e.target.id));
+        }
+      },
+      { rootMargin: '-40% 0px -55% 0px' }
+    );
+    windows.forEach((w) => io.observe(w));
+  } else if (location.pathname.includes('/blog')) {
+    tasks.forEach((t) => t.classList.toggle('is-active', t.dataset.task === 'blog'));
+  }
+</script>
+
+<style>
+  .taskbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    display: flex;
+    align-items: stretch;
+    height: var(--taskbar-h);
+    background: var(--taskbar);
+  }
+
+  .start {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 22px 0 10px;
+    border: 0;
+    border-radius: 0 12px 12px 0;
+    background: radial-gradient(circle at 20% 10%, #8fd88f 0, transparent 40%),
+      linear-gradient(180deg, #3c9c3c 0%, #48b048 12%, #3ea63e 45%, #2d8f2d 80%, #237b23 100%);
+    box-shadow: inset -2px 0 4px rgba(0, 0, 0, 0.25), 2px 0 4px rgba(0, 0, 0, 0.3);
+    color: #fff;
+    font: italic bold 19px var(--font-title);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+  }
+  .start:hover {
+    filter: brightness(1.08);
+  }
+  .start.is-pressed {
+    filter: brightness(0.88);
+  }
+  .start__logo {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff 0 18%, #ffe27a 30%, #f59f1b 75%);
+    box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.75);
+  }
+
+  .tasks {
+    display: flex;
+    flex: 1;
+    gap: 3px;
+    min-width: 0;
+    margin: 0;
+    padding: 3px 6px;
+    list-style: none;
+    overflow: hidden;
+  }
+  .tasks li {
+    min-width: 0;
+  }
+  .task {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 100%;
+    max-width: 160px;
+    padding: 0 10px;
+    border-radius: 3px;
+    background: linear-gradient(180deg, #4b9cff 0%, #3c81f3 15%, #3c81f3 85%, #2964d6 100%);
+    box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.3), inset -1px -1px 0 rgba(0, 0, 0, 0.2);
+    color: #fff;
+    font-size: 12px;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .task span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .task:hover {
+    color: #fff;
+    filter: brightness(1.12);
+  }
+  .task.is-active {
+    background: linear-gradient(180deg, #1e52b7 0%, #1d4fb0 100%);
+    box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.45);
+  }
+
+  .tray {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 14px;
+    border-left: 1px solid #1042af;
+    background: linear-gradient(180deg, #0c59b9 1%, #139ee9 6%, #18b5f2 10%, #139beb 14%, #1290e8 19%, #0d8dea 63%, #0d9ff1 81%, #0f9eed 88%, #119be9 91%, #1392e2 94%, #137ed7 97%, #095bc9 100%);
+    box-shadow: inset 1px 0 1px #18bbff;
+    color: #fff;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  /* Start menu */
+  .start-menu {
+    position: fixed;
+    left: 0;
+    bottom: var(--taskbar-h);
+    z-index: 110;
+    width: min(400px, 100vw);
+    border: 1px solid var(--frame-dark);
+    border-radius: 8px 8px 0 0;
+    background: #fff;
+    box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+  }
+  .start-menu[hidden] {
+    display: none;
+  }
+  .start-menu__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: linear-gradient(180deg, #1868ce 0%, #0e60cb 12%, #0e60cb 20%, #1164cf 32%, #1667cf 33%, #1b6cd3 47%, #1e70d9 54%, #2476dc 60%, #297ae0 65%, #3482e3 77%, #3786e5 79%, #428ee9 90%, #4791eb 100%);
+    color: #fff;
+    font: bold 15px var(--font-title);
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+  }
+  .start-menu__pic {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 2px solid #fff;
+    border-radius: 4px;
+    background: #d8e6fb;
+    overflow: hidden;
+  }
+  .start-menu__pic img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .start-menu__body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 2px solid #e8913a;
+  }
+  .start-menu ul {
+    margin: 0;
+    padding: 6px 4px;
+    list-style: none;
+  }
+  .start-menu__right {
+    background: #d3e5fa;
+    border-left: 1px solid #95bdee;
+  }
+  .start-menu a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px;
+    color: #000;
+    font-size: 12px;
+    text-decoration: none;
+  }
+  .start-menu__left a {
+    font-weight: bold;
+  }
+  .start-menu__right a {
+    color: #00136b;
+  }
+  .start-menu a:hover,
+  .start-menu a:focus-visible {
+    background: var(--select);
+    color: #fff;
+    outline: none;
+  }
+  .start-menu__sep {
+    height: 1px;
+    margin: 4px 6px;
+    background: #95bdee;
+  }
+  .start-menu__foot {
+    display: flex;
+    justify-content: flex-end;
+    padding: 6px 10px;
+    background: linear-gradient(180deg, #4282d6 0%, #3b85e0 3%, #418ae3 6%, #418ae3 10%, #3c87e2 21%, #3786e4 26%, #3482e3 29%, #2e7ee1 39%, #2374df 49%, #2072db 57%, #196edb 66%, #176bd8 74%, #1468d5 80%, #1060cf 89%, #0e5ccb 97%);
+  }
+  .start-menu__logoff {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 6px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    background: none;
+    color: #fff;
+    font: 12px var(--font-ui);
+    cursor: pointer;
+  }
+  .start-menu__logoff:hover,
+  .start-menu__logoff:focus-visible {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.15);
+    outline: none;
+  }
+  .start-menu__key {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border: 1px solid #fff;
+    border-radius: 4px;
+    background: radial-gradient(circle at 35% 30%, #ffe7a3, #f2b62e 60%, #c98a0b);
+  }
+  .start-menu__key svg {
+    width: 14px;
+    height: 14px;
+    fill: #fff;
+    filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.35));
+  }
+
+  @media (max-width: 720px) {
+    .tasks {
+      visibility: hidden;
+    }
+    .tray__place {
+      display: none;
+    }
+  }
+</style>

@@ -1,0 +1,437 @@
+---
+// Research section as a file explorer: a Folders tree of files on the left,
+// the selected folder or file opened on the right.
+import Window from './Window.astro';
+import Icon from './Icon.astro';
+import { papers, researchPath, interests, orgLinks } from '../data/content';
+
+const root = 'C:\\Documents and Settings\\Antoine\\My Documents\\Research';
+const path = {
+  research: root,
+  manuscripts: `${root}\\Manuscripts`,
+  path: `${root}\\Research path.txt`,
+  interests: `${root}\\Interests.txt`,
+  links: `${root}\\Links`,
+};
+const links = [
+  { label: 'Mila', href: orgLinks.mila },
+  { label: 'Chandar Lab', href: orgLinks.chandarLab },
+  { label: 'Sarath Chandar', href: orgLinks.sarath },
+];
+const isMe = (a: string) => a.startsWith('Lafrance');
+---
+
+<Window
+  id="research"
+  title="Research"
+  icon="folder"
+  menu
+  toolbar
+  flush
+  address={path.manuscripts}
+>
+  <div class="explorer">
+    <nav class="tree" aria-label="Research folders">
+      <p class="tree__head" aria-hidden="true">Folders <span class="tree__x"></span></p>
+      <ul class="tree__root" role="list">
+        <li>
+          <span class="tree__item tree__item--static"><Icon name="desktop" size={16} />Desktop</span>
+          <ul role="list">
+            <li>
+              <span class="tree__item tree__item--static"><Icon name="folder" size={16} />My Documents</span>
+              <ul role="list">
+                <li>
+                  <button class="tree__item" type="button" data-open="research" data-path={path.research}>
+                    <Icon name="folder" size={16} />Research
+                  </button>
+                  <ul role="list">
+                    <li>
+                      <button class="tree__item" type="button" data-open="manuscripts" data-path={path.manuscripts} aria-current="true">
+                        <Icon name="folder" size={16} />Manuscripts
+                      </button>
+                      <ul role="list">
+                        {papers.map((p) => (
+                          <li>
+                            <button
+                              class="tree__item"
+                              type="button"
+                              data-open="manuscripts"
+                              data-file={`paper-${p.id}`}
+                              data-path={`${path.manuscripts}\\${p.file}`}
+                            >
+                              <Icon name="document" size={16} />{p.file}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </li>
+                    <li>
+                      <button class="tree__item" type="button" data-open="path" data-path={path.path}>
+                        <Icon name="text" size={16} />Research path.txt
+                      </button>
+                    </li>
+                    <li>
+                      <button class="tree__item" type="button" data-open="interests" data-path={path.interests}>
+                        <Icon name="text" size={16} />Interests.txt
+                      </button>
+                    </li>
+                    <li>
+                      <button class="tree__item" type="button" data-open="links" data-path={path.links}>
+                        <Icon name="folder" size={16} />Links
+                      </button>
+                      <ul role="list">
+                        {links.map((l) => (
+                          <li>
+                            <a class="tree__item" href={l.href}><Icon name="globe" size={16} />{l.label}</a>
+                          </li>
+                        ))}
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="view">
+      <!-- Research folder: icons view -->
+      <div class="pane icons" data-pane="research" hidden>
+        <button class="icons__item" type="button" data-open="manuscripts" data-path={path.manuscripts}>
+          <Icon name="folder" size={48} /><span>Manuscripts</span>
+        </button>
+        <button class="icons__item" type="button" data-open="path" data-path={path.path}>
+          <Icon name="text" size={48} /><span>Research path.txt</span>
+        </button>
+        <button class="icons__item" type="button" data-open="interests" data-path={path.interests}>
+          <Icon name="text" size={48} /><span>Interests.txt</span>
+        </button>
+        <button class="icons__item" type="button" data-open="links" data-path={path.links}>
+          <Icon name="folder" size={48} /><span>Links</span>
+        </button>
+      </div>
+
+      <!-- Manuscripts folder: the papers -->
+      <div class="pane" data-pane="manuscripts">
+        <h3 class="group-head">Manuscripts in preparation ({papers.length})</h3>
+        <ol class="files" role="list">
+          {papers.map((p) => (
+            <li class="file" data-file={`paper-${p.id}`}>
+              <div class="file__head">
+                <Icon name="document" size={32} />
+                <div>
+                  <h4 class="file__title">{p.title}</h4>
+                  <p class="file__authors">
+                    {p.authors.map((a, i) => (
+                      <>
+                        {isMe(a) ? <strong>{a}</strong> : a}
+                        {i < p.authors.length - 1 ? ', ' : ''}
+                      </>
+                    ))}
+                  </p>
+                  <p class="file__meta">{p.status} · {p.year}</p>
+                </div>
+              </div>
+              <div class="file__body">
+                <p>{p.summary}</p>
+                <div class="balloon">
+                  <p class="balloon__title">What I did</p>
+                  <p>{p.contribution}</p>
+                </div>
+                {p.links.length > 0 && (
+                  <p class="file__links">
+                    {p.links.map((l) => <a class="button" href={l.href}>{l.label}</a>)}
+                  </p>
+                )}
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <!-- Text files -->
+      <div class="pane doc" data-pane="path" hidden>
+        <p class="doc__name"><Icon name="text" size={16} />Research path.txt</p>
+        <p class="doc__text">{researchPath}</p>
+      </div>
+      <div class="pane doc" data-pane="interests" hidden>
+        <p class="doc__name"><Icon name="text" size={16} />Interests.txt</p>
+        <ul class="doc__text" role="list">{interests.map((i) => <li>- {i}</li>)}</ul>
+      </div>
+
+      <!-- Links folder: shortcuts -->
+      <div class="pane icons" data-pane="links" hidden>
+        {links.map((l) => (
+          <a class="icons__item" href={l.href}><Icon name="globe" size={48} /><span>{l.label}</span></a>
+        ))}
+      </div>
+    </div>
+  </div>
+</Window>
+
+<script>
+  const explorer = document.querySelector<HTMLElement>('#research .explorer')!;
+  const panes = explorer.querySelectorAll<HTMLElement>('[data-pane]');
+  const papers = explorer.querySelectorAll<HTMLElement>('.file[data-file]');
+  const treeItems = explorer.querySelectorAll<HTMLElement>('.tree [data-open]');
+  const address = document.querySelector('#research [data-address]');
+
+  const open = (trigger: HTMLElement) => {
+    const { open: pane, file, path } = trigger.dataset;
+    panes.forEach((p) => (p.hidden = p.dataset.pane !== pane));
+    // Opening one paper shows just that paper; the folder shows both.
+    papers.forEach((p) => (p.hidden = !!file && p.dataset.file !== file));
+    treeItems.forEach((t) => {
+      const match = t.dataset.open === pane && (t.dataset.file ?? '') === (file ?? '');
+      if (match) t.setAttribute('aria-current', 'true');
+      else t.removeAttribute('aria-current');
+    });
+    if (address && path) address.textContent = path;
+  };
+
+  explorer.addEventListener('click', (e) => {
+    const trigger = (e.target as Element).closest<HTMLElement>('[data-open]');
+    if (trigger) open(trigger);
+  });
+</script>
+
+<style>
+  .explorer {
+    display: grid;
+    grid-template-columns: 250px minmax(0, 1fr);
+    min-height: 460px;
+    background: #fff;
+  }
+
+  /* Folders tree */
+  .tree {
+    padding-bottom: 12px;
+    border-right: 1px solid #d6d2c2;
+    font-size: 12px;
+    overflow: auto;
+  }
+  .tree__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 6px;
+    border-bottom: 1px solid #d6d2c2;
+    background: var(--face);
+  }
+  .tree__x {
+    position: relative;
+    width: 10px;
+    height: 10px;
+  }
+  .tree__x::before,
+  .tree__x::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: -1px;
+    width: 1.5px;
+    height: 12px;
+    background: #333;
+    transform: rotate(45deg);
+  }
+  .tree__x::after {
+    transform: rotate(-45deg);
+  }
+  .tree ul {
+    margin: 0;
+    padding: 0 0 0 19px;
+    list-style: none;
+  }
+  .tree .tree__root {
+    padding: 6px 4px 0 6px;
+  }
+  .tree li {
+    position: relative;
+  }
+  /* dotted connector lines */
+  .tree ul ul > li::before {
+    content: '';
+    position: absolute;
+    left: -11px;
+    top: 0;
+    bottom: 0;
+    border-left: 1px dotted #a0a0a0;
+  }
+  .tree ul ul > li:last-child::before {
+    bottom: auto;
+    height: 11px;
+  }
+  .tree ul ul > li::after {
+    content: '';
+    position: absolute;
+    left: -11px;
+    top: 11px;
+    width: 9px;
+    border-top: 1px dotted #a0a0a0;
+  }
+  .tree__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    max-width: 100%;
+    margin: 1px 0;
+    padding: 1px 3px;
+    border: 1px solid transparent;
+    background: none;
+    color: #000;
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: default;
+  }
+  button.tree__item,
+  a.tree__item {
+    cursor: pointer;
+  }
+  .tree__item:hover {
+    color: #000;
+    text-decoration: underline;
+  }
+  .tree__item[aria-current='true'] {
+    background: var(--select);
+    color: #fff;
+  }
+  .tree__item:focus-visible {
+    border: 1px dotted #000;
+    outline: none;
+  }
+
+  /* Right-hand view */
+  .view {
+    padding: 14px 18px 20px;
+    min-width: 0;
+  }
+  .pane[hidden] {
+    display: none;
+  }
+
+  .icons {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 12px 8px;
+  }
+  .icons__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    width: 96px;
+    padding: 6px 2px;
+    border: 1px solid transparent;
+    background: none;
+    color: #000;
+    font: 12px var(--font-ui);
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .icons__item:hover {
+    color: #000;
+  }
+  .icons__item:hover span,
+  .icons__item:focus-visible span {
+    background: var(--select);
+    color: #fff;
+  }
+  .icons__item:focus-visible {
+    border: 1px dotted #000;
+    outline: none;
+  }
+  .icons__item span {
+    padding: 0 2px;
+  }
+
+  .doc__name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e3e3e3;
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+  .doc__text {
+    max-width: 70ch;
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.6;
+    list-style: none;
+  }
+
+  /* Papers */
+  .files {
+    display: grid;
+    gap: 22px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .file[hidden] {
+    display: none;
+  }
+  .file__head {
+    display: flex;
+    gap: 12px;
+  }
+  .file__title {
+    font-size: 15px;
+    color: #000;
+  }
+  .file__authors {
+    margin-top: 4px;
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+  .file__authors strong {
+    color: #000;
+  }
+  .file__meta {
+    color: var(--group-blue);
+    font-size: 12px;
+  }
+  .file__body {
+    max-width: 72ch;
+    margin: 12px 0 0 44px;
+    font-size: 14px;
+  }
+  .balloon {
+    margin-top: 12px;
+    padding: 8px 12px;
+    border: 1px solid #000;
+    border-radius: 6px;
+    background: #ffffe1;
+  }
+  .balloon__title {
+    font-weight: bold;
+  }
+  .file__links {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  @media (max-width: 820px) {
+    .explorer {
+      grid-template-columns: minmax(0, 1fr);
+      min-height: 0;
+    }
+    .tree {
+      border-right: 0;
+      border-bottom: 1px solid #d6d2c2;
+    }
+    .file__body {
+      margin-left: 0;
+    }
+  }
+</style>

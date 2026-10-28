@@ -1,0 +1,598 @@
+---
+// Education & experience as an old open-source media player playing a
+// slideshow: photos with old-school transitions and subtitles, real
+// play/pause/prev/stop/next controls, and a docked playlist that jumps
+// to each part of the timeline.
+import { Image } from 'astro:assets';
+import Window from './Window.astro';
+import { tracks, slides } from '../data/content';
+
+const pad = (n: number) => String(n).padStart(2, '0');
+const SLIDE_SECONDS = 5;
+const total = slides.length * SLIDE_SECONDS;
+const clock = (s: number) => `${pad(Math.floor(s / 60))}:${pad(s % 60)}`;
+const firstSlide = (track: number) => slides.findIndex((s) => s.track === track);
+---
+
+<Window
+  id="tracks"
+  title="Education & Experience – Media Player"
+  icon="cone"
+  menu={['Media', 'Playback', 'Audio', 'Video', 'Tools', 'View', 'Help']}
+  flush
+>
+  <div class="vlc" data-seconds={SLIDE_SECONDS}>
+    <div class="vlc__screen" role="group" aria-roledescription="slideshow" aria-label="Education and experience photos">
+      {slides.map((s, i) => (
+        <figure
+          class:list={['vlc__slide', { 'is-active': i === 0 }]}
+          data-track={s.track}
+          aria-hidden={i === 0 ? undefined : 'true'}
+        >
+          <Image
+            src={s.image}
+            alt={s.alt}
+            width={Math.min(960, s.image.width)}
+            loading={i === 0 ? 'eager' : 'lazy'}
+          />
+          <figcaption class="sr-only">{s.caption}</figcaption>
+        </figure>
+      ))}
+      <p class="vlc__osd" data-osd aria-hidden="true"></p>
+      <p class="vlc__subtitle" data-subtitle aria-hidden="true">{slides[0].caption}</p>
+    </div>
+
+    <div class="vlc__seek" aria-hidden="true">
+      <span data-elapsed>00:00</span>
+      <span class="vlc__groove"><span class="vlc__fill" data-fill></span></span>
+      <span>{clock(total)}</span>
+    </div>
+
+    <div class="vlc__controls">
+      <button class="vlc__btn vlc__btn--play" type="button" data-act="toggle" aria-label="Pause slideshow">
+        <svg class="vlc__icon-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3l8 5-8 5z" /></svg>
+        <svg class="vlc__icon-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 3h3v10H4zM9 3h3v10H9z" /></svg>
+      </button>
+      <span class="vlc__group">
+        <button class="vlc__btn" type="button" data-act="prev" aria-label="Previous photo">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3h2v10H3zM13 3v10L6 8z" /></svg>
+        </button>
+        <button class="vlc__btn" type="button" data-act="stop" aria-label="Stop and go back to the start">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4h8v8H4z" /></svg>
+        </button>
+        <button class="vlc__btn" type="button" data-act="next" aria-label="Next photo">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11 3h2v10h-2zM3 3v10l7-5z" /></svg>
+        </button>
+      </span>
+      <span class="vlc__group">
+        <button class="vlc__btn" type="button" data-act="fullscreen" aria-label="Full screen">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2h5v2H4v3H2zM9 2h5v5h-2V4H9zM2 9h2v3h3v2H2zM12 9h2v5H9v-2h3z" /></svg>
+        </button>
+        <span class="vlc__btn is-on" aria-hidden="true">
+          <svg viewBox="0 0 16 16"><path d="M2 3h12v2H2zM2 7h12v2H2zM2 11h12v2H2z" /></svg>
+        </span>
+        <span class="vlc__btn is-on" aria-hidden="true">
+          <svg viewBox="0 0 16 16"><path d="M3 6a3 3 0 013-3h6V1l3 3-3 3V5H6a1 1 0 00-1 1v2H3zM13 10a3 3 0 01-3 3H4v2l-3-3 3-3v2h6a1 1 0 001-1V8h2z" /></svg>
+        </span>
+      </span>
+      <span class="vlc__volume" aria-hidden="true">
+        <svg viewBox="0 0 16 16"><path d="M2 6h3l4-3v10l-4-3H2z" /></svg>
+        <span class="vlc__wedge"><span></span></span>
+      </span>
+    </div>
+
+    <div class="vlc__playlist">
+      <table>
+        <caption class="sr-only">Education and work experience. Select a row to show its photos.</caption>
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Title</th>
+            <th scope="col">Artist</th>
+            <th scope="col" class="vlc__col-dur">Duration</th>
+          </tr>
+        </thead>
+        <tbody>
+          {tracks.map((t, i) => (
+            <tr
+              class:list={{ 'is-active': i === slides[0].track }}
+              tabindex="0"
+              data-track={i}
+              data-first={firstSlide(i)}
+              data-label={`Track ${pad(i + 1)} · ${t.title}`}
+            >
+              <td class="vlc__num">{pad(i + 1)}</td>
+              <td>
+                <span class="vlc__row-title">{t.title}</span>
+                <span class="vlc__row-note">{t.note}</span>
+              </td>
+              <td class="vlc__row-org">{t.org}</td>
+              <td class="vlc__col-dur">{t.start} – {t.end}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</Window>
+
+<script>
+  const player = document.querySelector<HTMLElement>('.vlc')!;
+  const screen = player.querySelector<HTMLElement>('.vlc__screen')!;
+  const slideEls = [...player.querySelectorAll<HTMLElement>('.vlc__slide')];
+  const rows = [...player.querySelectorAll<HTMLElement>('.vlc__playlist tbody tr')];
+  const subtitle = player.querySelector<HTMLElement>('[data-subtitle]')!;
+  const osd = player.querySelector<HTMLElement>('[data-osd]')!;
+  const fill = player.querySelector<HTMLElement>('[data-fill]')!;
+  const elapsedEl = player.querySelector<HTMLElement>('[data-elapsed]')!;
+  const toggleBtn = player.querySelector<HTMLButtonElement>('[data-act="toggle"]')!;
+
+  const SLIDE_MS = Number(player.dataset.seconds) * 1000;
+  const TOTAL_MS = SLIDE_MS * slideEls.length;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Old slideshow transitions, used in turn.
+  const TRANSITIONS = ['fade', 'wipe', 'iris', 'blinds', 'diamond'];
+
+  let index = 0;
+  let elapsed = 0; // ms into the current slide
+  let playing = !reduced;
+  let visible = false;
+  let transitionCount = 0;
+  let last = performance.now();
+  let osdTimer = 0;
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const clock = (ms: number) => {
+    const s = Math.floor(ms / 1000);
+    return `${pad(Math.floor(s / 60))}:${pad(s % 60)}`;
+  };
+  const captionOf = (el: HTMLElement) => el.querySelector('figcaption')!.textContent ?? '';
+
+  const finishTransition = () => {
+    slideEls.forEach((el) => {
+      if (el.classList.contains('is-entering')) el.classList.remove('is-entering');
+      if (el !== slideEls[index]) el.classList.remove('is-active');
+    });
+  };
+
+  const showOsd = (text: string) => {
+    osd.textContent = text;
+    osd.classList.add('is-on');
+    clearTimeout(osdTimer);
+    osdTimer = window.setTimeout(() => osd.classList.remove('is-on'), 2000);
+  };
+
+  const go = (next: number) => {
+    next = (next + slideEls.length) % slideEls.length;
+    if (next === index) return;
+    finishTransition();
+    const from = slideEls[index];
+    const to = slideEls[next];
+    index = next;
+    elapsed = 0;
+
+    from.setAttribute('aria-hidden', 'true');
+    to.removeAttribute('aria-hidden');
+    to.classList.add('is-active');
+    if (!reduced) {
+      to.dataset.t = TRANSITIONS[transitionCount++ % TRANSITIONS.length];
+      to.classList.add('is-entering');
+      to.addEventListener('animationend', finishTransition, { once: true });
+    } else {
+      finishTransition();
+    }
+
+    subtitle.textContent = captionOf(to);
+    const track = to.dataset.track;
+    rows.forEach((r) => r.classList.toggle('is-active', r.dataset.track === track));
+    const row = rows.find((r) => r.dataset.track === track);
+    if (row) showOsd(row.dataset.label ?? '');
+    render();
+  };
+
+  const render = () => {
+    const pos = index * SLIDE_MS + elapsed;
+    fill.style.width = `${(pos / TOTAL_MS) * 100}%`;
+    elapsedEl.textContent = clock(pos);
+  };
+
+  const setPlaying = (on: boolean) => {
+    playing = on;
+    player.classList.toggle('is-paused', !on);
+    toggleBtn.setAttribute('aria-label', on ? 'Pause slideshow' : 'Play slideshow');
+    last = performance.now();
+  };
+
+  // Only advance while the player is on screen and the tab is visible.
+  const tick = (now: number) => {
+    const dt = now - last;
+    last = now;
+    if (playing && visible && !document.hidden) {
+      elapsed += dt;
+      if (elapsed >= SLIDE_MS) go(index + 1);
+      else render();
+    }
+    requestAnimationFrame(tick);
+  };
+
+  new IntersectionObserver(([entry]) => (visible = entry.isIntersecting)).observe(screen);
+
+  player.addEventListener('click', (e) => {
+    const btn = (e.target as Element).closest<HTMLElement>('[data-act]');
+    if (!btn) return;
+    const act = btn.dataset.act;
+    if (act === 'toggle') setPlaying(!playing);
+    if (act === 'next') go(index + 1);
+    if (act === 'prev') go(index - 1);
+    if (act === 'stop') {
+      setPlaying(false);
+      go(0);
+      elapsed = 0;
+      render();
+    }
+    if (act === 'fullscreen') {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else screen.requestFullscreen?.();
+    }
+  });
+
+  const pick = (row: HTMLElement) => go(Number(row.dataset.first));
+  rows.forEach((r) => {
+    r.addEventListener('click', () => pick(r));
+    r.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        pick(r);
+      }
+    });
+  });
+
+  setPlaying(playing);
+  render();
+  requestAnimationFrame(tick);
+</script>
+
+<style>
+  .vlc {
+    display: grid;
+  }
+
+  /* Video area */
+  .vlc__screen {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    max-height: 440px;
+    width: 100%;
+    background: #000;
+    overflow: hidden;
+  }
+  .vlc__screen:fullscreen {
+    max-height: none;
+  }
+  .vlc__slide {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    background: #000;
+    opacity: 0;
+  }
+  .vlc__slide :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .vlc__slide.is-active {
+    z-index: 1;
+    opacity: 1;
+  }
+  /* Longhands on purpose: the CSS minifier drops the duration from an
+     `animation` shorthand that has no name. */
+  .vlc__slide.is-entering {
+    z-index: 2;
+    animation-duration: 0.9s;
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: both;
+  }
+  .vlc__slide.is-entering[data-t='fade'] {
+    animation-name: t-fade;
+  }
+  .vlc__slide.is-entering[data-t='wipe'] {
+    animation-name: t-wipe;
+  }
+  .vlc__slide.is-entering[data-t='iris'] {
+    animation-name: t-iris;
+  }
+  .vlc__slide.is-entering[data-t='diamond'] {
+    animation-name: t-diamond;
+  }
+  .vlc__slide.is-entering[data-t='blinds'] {
+    animation-name: t-blinds;
+    -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0 var(--blind), transparent var(--blind) 12.5%);
+    mask-image: repeating-linear-gradient(to bottom, #000 0 var(--blind), transparent var(--blind) 12.5%);
+  }
+  @property --blind {
+    syntax: '<percentage>';
+    inherits: false;
+    initial-value: 0%;
+  }
+  @keyframes t-fade {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes t-wipe {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+  @keyframes t-iris {
+    from {
+      clip-path: circle(0% at 50% 50%);
+    }
+    to {
+      clip-path: circle(75% at 50% 50%);
+    }
+  }
+  @keyframes t-diamond {
+    from {
+      clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%);
+    }
+    to {
+      clip-path: polygon(50% -50%, 150% 50%, 50% 150%, -50% 50%);
+    }
+  }
+  @keyframes t-blinds {
+    from {
+      --blind: 0%;
+    }
+    to {
+      --blind: 12.6%;
+    }
+  }
+
+  /* On-screen text */
+  .vlc__osd,
+  .vlc__subtitle {
+    position: absolute;
+    z-index: 3;
+    margin: 0;
+    color: #fff;
+    text-shadow:
+      -1px -1px 0 #000,
+      1px -1px 0 #000,
+      -1px 1px 0 #000,
+      1px 1px 0 #000,
+      0 2px 3px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+  }
+  .vlc__osd {
+    top: 10px;
+    right: 14px;
+    font: bold 14px var(--font-ui);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .vlc__osd.is-on {
+    opacity: 1;
+  }
+  .vlc__subtitle {
+    left: 50%;
+    bottom: 14px;
+    width: min(90%, 640px);
+    transform: translateX(-50%);
+    font: bold clamp(13px, 1.8vw, 17px) / 1.35 var(--font-ui);
+    text-align: center;
+  }
+
+  /* Seek bar */
+  .vlc__seek {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px 4px;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+  .vlc__groove {
+    position: relative;
+    flex: 1;
+    height: 8px;
+    border: 1px solid #8c8a7e;
+    border-radius: 4px;
+    background: linear-gradient(180deg, #d9d7cc, #fff);
+  }
+  .vlc__fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    border-radius: 4px;
+    background: linear-gradient(180deg, #ffc27a, #ff8800 60%, #e06d00);
+  }
+  .vlc__fill::after {
+    content: '';
+    position: absolute;
+    right: -7px;
+    top: -4px;
+    width: 14px;
+    height: 14px;
+    border: 1px solid #6d6b61;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff, #d6d3c6);
+  }
+
+  /* Controls */
+  .vlc__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px 10px;
+    border-bottom: 1px solid #b9b6a6;
+  }
+  .vlc__group {
+    display: flex;
+    gap: 1px;
+  }
+  .vlc__btn {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 24px;
+    padding: 0;
+    border: 1px solid #8c8a7e;
+    border-radius: 0;
+    background: linear-gradient(180deg, #fff, #e3e1d6);
+  }
+  button.vlc__btn {
+    cursor: pointer;
+  }
+  button.vlc__btn:hover {
+    background: linear-gradient(180deg, #fff, #fbe2bf);
+    border-color: #e5a01a;
+  }
+  button.vlc__btn:active {
+    background: linear-gradient(180deg, #d9d6c8, #efede3);
+  }
+  .vlc__group .vlc__btn:first-child {
+    border-radius: 3px 0 0 3px;
+  }
+  .vlc__group .vlc__btn:last-child {
+    border-radius: 0 3px 3px 0;
+  }
+  .vlc__btn.is-on {
+    background: linear-gradient(180deg, #d9d6c8, #efede3);
+  }
+  .vlc__btn svg {
+    width: 14px;
+    height: 14px;
+    fill: #333;
+  }
+  .vlc__btn--play {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+  }
+  .vlc__btn--play svg {
+    width: 18px;
+    height: 18px;
+  }
+  .vlc__icon-play {
+    display: none;
+    margin-left: 2px;
+  }
+  .vlc.is-paused .vlc__icon-play {
+    display: block;
+  }
+  .vlc.is-paused .vlc__icon-pause {
+    display: none;
+  }
+  .vlc__volume {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+  }
+  .vlc__volume svg {
+    width: 16px;
+    height: 16px;
+    fill: #333;
+  }
+  .vlc__wedge {
+    position: relative;
+    width: 70px;
+    height: 16px;
+    background: #cfccbf;
+    clip-path: polygon(0 100%, 100% 0, 100% 100%);
+  }
+  .vlc__wedge span {
+    position: absolute;
+    inset: 0 30% 0 0;
+    background: linear-gradient(90deg, #3eb23e, #b6d936 70%, #f2c12e);
+  }
+
+  /* Docked playlist: a classic list view */
+  .vlc__playlist {
+    max-height: 420px;
+    overflow: auto;
+    background: #fff;
+  }
+  .vlc__playlist table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .vlc__playlist th {
+    position: sticky;
+    top: 0;
+    padding: 3px 8px;
+    border-right: 1px solid #d6d2c2;
+    border-bottom: 1px solid #d6d2c2;
+    background: linear-gradient(180deg, #fff, #ebeadb);
+    font-weight: normal;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .vlc__playlist td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #f0efe7;
+    vertical-align: top;
+  }
+  .vlc__playlist tbody tr {
+    cursor: pointer;
+  }
+  .vlc__playlist tbody tr:hover {
+    background: #eef4fd;
+  }
+  .vlc__playlist tbody tr:focus-visible {
+    outline: 1px dotted #000;
+    outline-offset: -1px;
+  }
+  .vlc__playlist tr.is-active,
+  .vlc__playlist tr.is-active:hover {
+    background: var(--select);
+    color: #fff;
+  }
+  .vlc__num {
+    width: 32px;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .vlc__row-title {
+    display: block;
+    font-weight: bold;
+  }
+  .vlc__row-note {
+    display: block;
+    margin-top: 2px;
+    color: var(--text-dim);
+    font-size: 12.5px;
+  }
+  .vlc__row-org {
+    white-space: nowrap;
+  }
+  .vlc__col-dur {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  tr.is-active .vlc__num,
+  tr.is-active .vlc__row-note {
+    color: #e5eeff;
+  }
+
+  @media (max-width: 640px) {
+    .vlc__col-dur {
+      display: none;
+    }
+    .vlc__row-org {
+      white-space: normal;
+    }
+    .vlc__osd {
+      display: none;
+    }
+  }
+</style>

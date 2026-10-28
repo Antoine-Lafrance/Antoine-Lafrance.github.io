@@ -1,0 +1,124 @@
+DESIGN PROMPT: Antoine Lafrance, personal research website
+==========================================================
+
+Content source: PLAN.txt. Copy lives in src/data/content.ts.
+(Direction changed on 2026-10-28: the earlier "Gen X Soft Club" / 3D
+concept was dropped in favour of an early-2000s desktop UI.)
+
+
+------------------------------------------------------------
+0. ONE-PARAGRAPH BRIEF
+------------------------------------------------------------
+
+A personal academic website for Antoine Lafrance, an M.Sc. student at
+Mila – Quebec AI Institute (Chandar Lab, supervised by Sarath Chandar),
+styled as an early-2000s desktop in the Windows XP era. The page is a
+desktop: rolling green hills under a blue sky, shortcut icons on the
+left, a blue taskbar with a green "start" button at the bottom. Each
+section of the site is a window with a glossy blue title bar, and each
+window imitates a classic app of the era that fits its content. It
+should feel nostalgic and playful, but stay professional: real
+readable text, a clear order, nothing that gets in the way of reading.
+
+
+------------------------------------------------------------
+1. RULES
+------------------------------------------------------------
+
+  - Inspired by, not copied: all artwork (wallpaper, icons, buttons) is
+    original CSS/SVG. No Microsoft logos, the Windows flag, the "Bliss"
+    photo, or real system icons.
+  - Readability first: body text 14–15px Tahoma/Verdana (bigger than
+    the real OS), good contrast, real HTML headings and lists.
+  - Windows scroll in one column (max ~980px); no dragging or
+    overlapping windows, so the page reads top to bottom on any screen.
+  - Interactions that are fun but harmless: minimize/close fold a
+    window, maximize widens dialogs, the taskbar and Start menu jump to
+    (and unfold) windows.
+  - Respect reduced motion: the small animations stop.
+  - Light mode only (no dark mode in this style).
+
+
+------------------------------------------------------------
+2. TOKENS
+------------------------------------------------------------
+
+  Window face #ECE9D8 · window frame #0831D9 · title bar blue gradient
+  (#0997FF → #0053EE → #0066FF → #003DD7) · list selection #316AC5 ·
+  explorer group headers #215DC6 · task pane gradient #7BA2E7 → #6375D6
+  · tooltip yellow #FFFFE1 · progress green #2ED330.
+  Fonts: Tahoma / Verdana for UI and text, Trebuchet MS bold for
+  title bars and big headings, Lucida Console for "LCD" text.
+
+
+------------------------------------------------------------
+3. GLOBAL FRAME
+------------------------------------------------------------
+
+  - Wallpaper: original SVG of green hills, blue sky, soft clouds;
+    fixed behind everything.
+  - Desktop icons (wide screens only): About Me, Research, Blog, My CV,
+    E-mail.
+  - Taskbar (fixed bottom): "start" button, one button per window
+    (the one in view is pressed), Blog button, tray with Montréal time.
+    On phones only Start + clock show.
+  - Start menu: user header with name; left column = the sections;
+    right column = Blog, CV, GitHub, LinkedIn, e-mail; "Back to top".
+
+
+------------------------------------------------------------
+4. SECTIONS → WINDOWS
+------------------------------------------------------------
+
+  01 About Me — user-account window. Blue side panel with the photo
+     tile and affiliations (Mila, Chandar Lab, Polytechnique,
+     Montréal). Name, role, intro, a yellow "Now:" note linking to the
+     current work, and buttons (E-mail, GitHub, LinkedIn, CV).
+  02 Current Work — file-copy progress dialog: pages "flying" between
+     two icons, "Optimising: Bayesian optimisers for foundation models
+     in biology", a green block progress bar, "Estimated completion:
+     April 2028".
+  03 Research — Explorer window with menu bar and address bar
+     (C:\Documents and Settings\Antoine\Research). Blue task pane:
+     Research Path, Interests, Other Places (links). File list grouped
+     under "Manuscripts in preparation (2)": each paper with authors
+     (Antoine in bold), status, summary, a yellow tooltip-style
+     "What I did" box, and a sunken "Preview" with its chart
+     (survival curves / waiting-time simulation).
+  04 Experience — media player: spinning CD + "now playing" panel,
+     playlist of 6 tracks (education + jobs). Hovering, focusing or
+     clicking a track updates "now playing".
+  05 Awards — Properties dialog with tabs, "Registered to: Antoine
+     Lafrance", awards listed in a group box.
+  06 Beyond Research — Explorer "tiles" view, grouped: Competitions &
+     Hackathons (Winner/Podium tags), Leadership & Involvement.
+  07 Contact — "New Message" mail window: Send (mailto), GitHub,
+     LinkedIn toolbar; To/Subject fields; short message; an inbox list
+     of latest blog posts and an "Open Blog" button.
+
+  Blog — Notepad-style window. (Placeholder now; the post template and
+  index come in the blog step.)
+
+
+------------------------------------------------------------
+5. TECHNICAL
+------------------------------------------------------------
+
+  - Astro static site, deployed by GitHub Actions to GitHub Pages
+    (repo Settings → Pages → Source: GitHub Actions).
+  - Components: Window, Taskbar (with Start menu), DesktopIcons,
+    Wallpaper, Icon, SurvivalGraphic, QueueGraphic.
+  - Tiny vanilla JS only (Start menu, clock, window buttons, playlist,
+    taskbar highlight). No 3D, no frameworks.
+
+
+------------------------------------------------------------
+6. NEXT STEPS
+------------------------------------------------------------
+
+  1. Fill the TODOs in content.ts (photo, current-work text, email,
+     CV, personal blurb).
+  2. Blog: Notepad-style post page, Explorer/Inbox-style index, RSS,
+     one sample post.
+  3. Polish: real headshot in the photo tile, Open Graph image,
+     final accessibility pass.

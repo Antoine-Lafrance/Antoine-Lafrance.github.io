@@ -1,0 +1,336 @@
+---
+// Mock "click your user name" welcome screen shown on the first visit of a
+// session. Clicking the user tile "logs in" and reveals the desktop. There is
+// no password field on purpose: it's decoration, not a real login.
+// Shown only when <html data-welcome> is set by the inline script in Base.
+import { Image } from 'astro:assets';
+import Icon from './Icon.astro';
+import { profile } from '../data/content';
+import { photo, photoFocus } from '../data/photo';
+---
+
+<div class="welcome" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
+  <div class="welcome__top"></div>
+
+  <div class="welcome__middle">
+    <div class="welcome__left">
+      <p class="welcome__brand" id="welcome-title">{profile.name}</p>
+      <p class="welcome__hint" data-welcome-hint>To begin, click your user name</p>
+    </div>
+    <div class="welcome__divider" aria-hidden="true"></div>
+    <div class="welcome__right">
+      <button class="welcome__user" type="button" data-welcome-login>
+        <span class="welcome__pic">
+          {photo ? (
+            <Image src={photo} alt="" width={160} loading="eager" style={`object-position: ${photoFocus}`} />
+          ) : (
+            <Icon name="user" size={48} />
+          )}
+        </span>
+        <span class="welcome__name">
+          <span>Antoine</span>
+          <span class="welcome__sub" data-welcome-status>M.Sc. student · Mila</span>
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <div class="welcome__bottom">
+    <button class="welcome__off" type="button" data-welcome-off>
+      <span class="welcome__power" aria-hidden="true"></span>
+      Turn off computer
+    </button>
+    <p class="welcome__note">After you log on, you can open any window from the Start menu.</p>
+  </div>
+
+  <div class="welcome__safe" data-welcome-safe hidden>
+    <p>It's now safe to turn off your computer.</p>
+    <button type="button" class="welcome__safe-back" data-welcome-back>Click here to turn it back on</button>
+  </div>
+</div>
+
+<script>
+  const root = document.documentElement;
+  const screen = document.querySelector<HTMLElement>('.welcome')!;
+  const login = screen.querySelector<HTMLButtonElement>('[data-welcome-login]')!;
+  const status = screen.querySelector('[data-welcome-status]')!;
+  const hint = screen.querySelector('[data-welcome-hint]')!;
+  const safe = screen.querySelector<HTMLElement>('[data-welcome-safe]')!;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Everything behind the welcome screen is unreachable until log on.
+  const background = [...document.body.children].filter(
+    (el): el is HTMLElement => el instanceof HTMLElement && el !== screen && el.tagName !== 'SCRIPT'
+  );
+  const setInert = (on: boolean) => background.forEach((el) => (el.inert = on));
+
+  const initialHint = hint.textContent;
+  const initialStatus = status.textContent;
+
+  const finish = () => {
+    delete root.dataset.welcome;
+    setInert(false);
+    try {
+      sessionStorage.setItem('welcomed', '1');
+    } catch {}
+    document.querySelector<HTMLElement>('.start')?.focus({ preventScroll: true });
+  };
+
+  const show = () => {
+    screen.classList.remove('is-loading', 'is-leaving');
+    hint.textContent = initialHint;
+    status.textContent = initialStatus;
+    safe.hidden = true;
+    root.dataset.welcome = '';
+    setInert(true);
+    login.focus();
+  };
+
+  login.addEventListener('click', () => {
+    if (screen.classList.contains('is-loading')) return;
+    screen.classList.add('is-loading');
+    hint.textContent = 'welcome';
+    status.textContent = 'Loading your personal settings...';
+    if (reduced) return finish();
+    setTimeout(() => {
+      screen.classList.add('is-leaving');
+      setTimeout(finish, 450);
+    }, 1100);
+  });
+
+  screen.querySelector('[data-welcome-off]')!.addEventListener('click', () => {
+    safe.hidden = false;
+    safe.querySelector<HTMLButtonElement>('button')!.focus();
+  });
+  screen.querySelector('[data-welcome-back]')!.addEventListener('click', () => {
+    safe.hidden = true;
+    login.focus();
+  });
+
+  // "Log Off" in the Start menu asks for the welcome screen again.
+  document.addEventListener('welcome:show', show);
+
+  if ('welcome' in root.dataset) show();
+</script>
+
+<style>
+  .welcome {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    background: radial-gradient(circle at 12% 18%, #93abe9 0%, #6d8fe2 22%, #5a7edc 45%) #5a7edc;
+    color: #fff;
+    font-family: var(--font-ui);
+  }
+  :global(html[data-welcome]) .welcome {
+    display: flex;
+  }
+  :global(html[data-welcome]) body {
+    overflow: hidden;
+  }
+  .welcome.is-leaving {
+    opacity: 0;
+    transition: opacity 0.45s ease;
+  }
+
+  .welcome__top,
+  .welcome__bottom {
+    flex: none;
+    background: #00309c;
+  }
+  .welcome__top {
+    height: clamp(48px, 10vh, 90px);
+    border-bottom: 2px solid;
+    border-image: linear-gradient(90deg, #00309c, #7d9de9 30%, #fff 50%, #7d9de9 70%, #00309c) 1;
+  }
+  .welcome__bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    min-height: clamp(64px, 12vh, 100px);
+    padding: 12px clamp(16px, 4vw, 40px);
+    border-top: 2px solid;
+    border-image: linear-gradient(90deg, #00309c, #f99736 25%, #fff 50%, #f99736 75%, #00309c) 1;
+  }
+
+  .welcome__middle {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: clamp(20px, 4vw, 48px);
+    padding: 24px clamp(16px, 4vw, 40px);
+  }
+  .welcome__left {
+    justify-self: end;
+    text-align: right;
+  }
+  .welcome__brand {
+    font: bold clamp(26px, 4vw, 40px) var(--font-title);
+    text-shadow: 1px 2px 3px rgba(0, 0, 0, 0.35);
+  }
+  .welcome__hint {
+    margin-top: 10px;
+    font-size: clamp(15px, 1.6vw, 18px);
+  }
+  .welcome.is-loading .welcome__hint {
+    font: italic bold clamp(32px, 5vw, 56px) var(--font-title);
+    text-shadow: 1px 2px 3px rgba(0, 0, 0, 0.35);
+  }
+  .welcome__divider {
+    width: 1px;
+    height: min(360px, 60%);
+    align-self: center;
+    background: linear-gradient(180deg, transparent, #fff 25%, #fff 75%, transparent);
+    opacity: 0.85;
+  }
+
+  .welcome__user {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 8px 40px 8px 8px;
+    border: 0;
+    border-radius: 10px 0 0 10px;
+    background: transparent;
+    color: #fff;
+    text-align: left;
+    cursor: pointer;
+  }
+  .welcome__user:hover,
+  .welcome__user:focus-visible,
+  .welcome.is-loading .welcome__user {
+    background: linear-gradient(90deg, #00309c 0%, rgba(0, 48, 156, 0.6) 60%, transparent 100%);
+    outline: none;
+  }
+  .welcome__pic {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 72px;
+    height: 72px;
+    border: 3px solid #fff;
+    border-radius: 6px;
+    background: #d8e6fb;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .welcome__user:hover .welcome__pic,
+  .welcome__user:focus-visible .welcome__pic,
+  .welcome.is-loading .welcome__pic {
+    border-color: #f8b54a;
+  }
+  .welcome__pic img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .welcome__name {
+    display: grid;
+    font: bold 22px var(--font-title);
+  }
+  .welcome__sub {
+    color: #d6e3ff;
+    font: 13px var(--font-ui);
+  }
+
+  .welcome__off {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px;
+    border: 0;
+    background: none;
+    color: #fff;
+    font: 15px var(--font-ui);
+    cursor: pointer;
+  }
+  .welcome__off:hover {
+    text-decoration: underline;
+  }
+  .welcome__off:focus-visible {
+    outline: 1px dotted #fff;
+  }
+  .welcome__power {
+    position: relative;
+    width: 30px;
+    height: 30px;
+    border: 1px solid #fff;
+    border-radius: 5px;
+    background: radial-gradient(circle at 35% 30%, #ff9d7a, #e24a1f 60%, #b62d0b);
+  }
+  .welcome__power::before {
+    content: '';
+    position: absolute;
+    inset: 7px;
+    border: 2px solid #fff;
+    border-top-color: transparent;
+    border-radius: 50%;
+  }
+  .welcome__power::after {
+    content: '';
+    position: absolute;
+    left: 13px;
+    top: 5px;
+    width: 2px;
+    height: 9px;
+    background: #fff;
+  }
+  .welcome__note {
+    max-width: 300px;
+    color: #d6e3ff;
+    font-size: 13px;
+    text-align: right;
+  }
+
+  .welcome__safe {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    gap: 24px;
+    background: #000;
+    color: #f2a541;
+    font: bold clamp(18px, 2.4vw, 26px) var(--font-ui);
+    text-align: center;
+  }
+  .welcome__safe[hidden] {
+    display: none;
+  }
+  .welcome__safe-back {
+    justify-self: center;
+    border: 0;
+    background: none;
+    color: #888;
+    font: 14px var(--font-ui);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  @media (max-width: 700px) {
+    .welcome__middle {
+      grid-template-columns: 1fr;
+      align-content: center;
+      justify-items: center;
+    }
+    .welcome__left {
+      justify-self: center;
+      text-align: center;
+    }
+    .welcome__divider {
+      width: 70%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #fff 25%, #fff 75%, transparent);
+    }
+    .welcome__user {
+      border-radius: 10px;
+      padding-right: 24px;
+    }
+    .welcome__note {
+      display: none;
+    }
+  }
+</style>

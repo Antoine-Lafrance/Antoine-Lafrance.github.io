@@ -1,0 +1,69 @@
+---
+// Wallpaper: a photo of a green hill under a blue sky (Chris Barbalis,
+// Unsplash License), over a drawn SVG fallback shown while it loads.
+const photo = `${import.meta.env.BASE_URL}wallpaper.jpg`;
+---
+
+<div class="wallpaper" aria-hidden="true" style={`--wallpaper-photo: url('${photo}')`}>
+  <svg viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <linearGradient id="wp-sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#2a6fd6" />
+        <stop offset="0.45" stop-color="#5a9be6" />
+        <stop offset="0.75" stop-color="#a9d0f5" />
+      </linearGradient>
+      <linearGradient id="wp-hill" x1="0" y1="0" x2="0.3" y2="1">
+        <stop offset="0" stop-color="#7cc943" />
+        <stop offset="0.35" stop-color="#4fa82b" />
+        <stop offset="1" stop-color="#2c7516" />
+      </linearGradient>
+      <linearGradient id="wp-hill-back" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#8fd05a" />
+        <stop offset="1" stop-color="#3e8e22" />
+      </linearGradient>
+      <radialGradient id="wp-shine" cx="35%" cy="62%" r="40%">
+        <stop offset="0" stop-color="#d9f59a" stop-opacity="0.7" />
+        <stop offset="1" stop-color="#d9f59a" stop-opacity="0" />
+      </radialGradient>
+      <filter id="wp-cloud" x="-30%" y="-60%" width="160%" height="220%">
+        <feGaussianBlur stdDeviation="18" />
+      </filter>
+    </defs>
+
+    <rect width="1600" height="1000" fill="url(#wp-sky)" />
+
+    <g fill="#ffffff" filter="url(#wp-cloud)" opacity="0.85">
+      <ellipse cx="260" cy="190" rx="180" ry="46" />
+      <ellipse cx="380" cy="170" rx="120" ry="40" />
+      <ellipse cx="980" cy="120" rx="220" ry="52" />
+      <ellipse cx="1120" cy="150" rx="150" ry="38" />
+      <ellipse cx="1420" cy="300" rx="160" ry="42" />
+      <ellipse cx="640" cy="330" rx="140" ry="30" opacity="0.6" />
+    </g>
+
+    <path d="M0 640 C 300 560, 700 520, 1000 560 S 1450 640, 1600 600 V1000 H0 Z" fill="url(#wp-hill-back)" />
+    <path d="M0 720 C 250 600, 650 560, 900 610 S 1350 760, 1600 700 V1000 H0 Z" fill="url(#wp-hill)" />
+    <ellipse cx="560" cy="700" rx="520" ry="140" fill="url(#wp-shine)" />
+  </svg>
+</div>
+
+<style>
+  .wallpaper {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .wallpaper svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  /* The photo sits on top of the drawing; until it loads, the drawing shows. */
+  .wallpaper::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--wallpaper-photo) 30% 75% / cover no-repeat;
+  }
+</style>

@@ -1,0 +1,29 @@
+---
+// Placeholder until the blog is built: a notepad-style window.
+import Base from '../../layouts/Base.astro';
+import Window from '../../components/Window.astro';
+---
+
+<Base title="Blog · Antoine Lafrance" description="Notes and posts by Antoine Lafrance.">
+  <Window id="blog" title="Blog.txt – Notepad" icon="notepad" headingLevel="h1">
+    <div class="notepad">
+      <p>No posts yet. The first one is on its way.</p>
+      <p>
+        <a href={import.meta.env.BASE_URL}>← Back to the desktop</a>
+      </p>
+    </div>
+  </Window>
+</Base>
+
+<style>
+  .notepad {
+    display: grid;
+    gap: 14px;
+    min-height: 260px;
+    padding: 12px 14px;
+    border: 1px solid #7f9db9;
+    background: #fff;
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+</style>

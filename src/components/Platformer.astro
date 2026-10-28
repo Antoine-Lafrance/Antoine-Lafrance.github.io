@@ -1,0 +1,343 @@
+---
+// Beyond Research as a pixel-art platformer. Competitions and clubs are
+// achievements to collect. The full list is always readable below the
+// game; collected ones light up (remembered in this browser).
+import Window from './Window.astro';
+import { beyondIntro, personal, competitions, leadership } from '../data/content';
+
+const comp = (title: string) => competitions.find((c) => c.title === title)!;
+const club = (title: string) => leadership.find((c) => c.title === title)!;
+
+// In the order they appear in the game.
+const achievements = [
+  { id: 'codeml', icon: 'chip', ...pick(comp('PolyAI CodeML')) },
+  { id: 'ccgp', icon: 'briefcase', ...pick(club('CCGP')), title: 'Joined CCGP' },
+  { id: 'ibm', icon: 'heart', ...pick(comp('IBM Pro Bono')) },
+  { id: 'datathon', icon: 'chart', ...pick(comp('Polyfinances Datathon')) },
+  { id: 'mckinsey', icon: 'lightbulb', ...pick(comp('McKinsey Challenge')) },
+  { id: 'hackmit', icon: 'glasses', ...pick(comp('HackMIT')) },
+  { id: 'polymonde', icon: 'globe', ...pick(club('PolyMonde')), title: 'Joined PolyMonde' },
+  {
+    id: 'companies',
+    icon: 'trophy',
+    title: '40+ AI companies visited',
+    tag: 'PolyMonde',
+    date: 'Belgium · Netherlands · South Korea',
+    text: 'With PolyMonde, I visited more than 40 companies working in artificial intelligence across three countries.',
+  },
+];
+
+function pick(c: { title: string; tag?: string; date: string; text: string }) {
+  return { title: c.title, tag: c.tag ?? '', date: c.date, text: c.text };
+}
+---
+
+<Window id="beyond" title="Beyond Research – Adventure" icon="people" flush>
+  <div class="beyond">
+    <p class="beyond__intro">{beyondIntro} Play through the years below, or just read the list.</p>
+    {personal && <p class="beyond__intro">{personal}</p>}
+
+    <div class="game" data-achievements={JSON.stringify(achievements.map(({ id, icon, title }) => ({ id, icon, title })))}>
+      <div class="game__stage">
+        <canvas
+          width="320"
+          height="180"
+          tabindex="0"
+          aria-label="Platformer game. Press Enter or click to start. Arrow keys or A and D to move, Space to jump."
+        ></canvas>
+      </div>
+      <div class="game__pad" aria-hidden="true">
+        <button type="button" class="game__btn" data-key="left" tabindex="-1">◀</button>
+        <button type="button" class="game__btn" data-key="right" tabindex="-1">▶</button>
+        <button type="button" class="game__btn game__btn--jump" data-key="jump" tabindex="-1">Jump</button>
+      </div>
+      <p class="game__help">Click the game, then use <kbd>←</kbd> <kbd>→</kbd> or <kbd>A</kbd> <kbd>D</kbd> to move and <kbd>Space</kbd> to jump.</p>
+    </div>
+
+    <h3 class="group-head">
+      Achievements (<span data-ach-count>0</span> of {achievements.length})
+      <button type="button" class="beyond__reset" data-ach-reset hidden>Reset</button>
+    </h3>
+    <ol class="ach" role="list">
+      {achievements.map((a) => (
+        <li class="ach__item is-locked" data-ach={a.id}>
+          <canvas class="ach__icon" width="16" height="16" data-icon={a.icon} aria-hidden="true"></canvas>
+          <div>
+            <p class="ach__title">
+              {a.title}
+              {a.tag && <span class:list={['ach__tag', `ach__tag--${a.tag.toLowerCase().split(' ')[0]}`]}>{a.tag}</span>}
+              <span class="ach__state" data-ach-state>Not collected yet</span>
+            </p>
+            <p class="ach__date">{a.date}</p>
+            <p class="ach__text">{a.text}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+    <p class="sr-only" aria-live="polite" data-ach-announce></p>
+  </div>
+</Window>
+
+<script>
+  import { Game, type AchievementInfo } from '../game/engine';
+  import { ITEMS, ITEM_PALETTE } from '../game/sprites';
+  import { Painter } from '../game/pixel';
+
+  const root = document.querySelector<HTMLElement>('.game')!;
+  const canvas = root.querySelector('canvas')!;
+  const list: AchievementInfo[] = JSON.parse(root.dataset.achievements!);
+  const info = Object.fromEntries(list.map((a) => [a.id, a]));
+  const countEl = document.querySelector('[data-ach-count]')!;
+  const announce = document.querySelector('[data-ach-announce]')!;
+  const resetBtn = document.querySelector<HTMLButtonElement>('[data-ach-reset]')!;
+
+  // Collected achievements are remembered in this browser only.
+  const KEY = 'beyond-achievements';
+  const load = () => {
+    try {
+      return new Set<string>(JSON.parse(localStorage.getItem(KEY) ?? '[]'));
+    } catch {
+      return new Set<string>();
+    }
+  };
+  const unlocked = load();
+  const save = () => {
+    try {
+      localStorage.setItem(KEY, JSON.stringify([...unlocked]));
+    } catch {}
+  };
+
+  // Pixel icons in the list
+  document.querySelectorAll<HTMLCanvasElement>('.ach__icon').forEach((c) => {
+    const p = new Painter(c.getContext('2d')!);
+    p.sprite(ITEMS[c.dataset.icon!] ?? ITEMS.star, ITEM_PALETTE, 0, 0);
+  });
+
+  const refreshList = () => {
+    document.querySelectorAll<HTMLElement>('[data-ach]').forEach((li) => {
+      const on = unlocked.has(li.dataset.ach!);
+      li.classList.toggle('is-locked', !on);
+      li.querySelector('[data-ach-state]')!.textContent = on ? 'Collected' : 'Not collected yet';
+    });
+    countEl.textContent = String(unlocked.size);
+    resetBtn.hidden = unlocked.size === 0;
+  };
+  refreshList();
+
+  const game = new Game(canvas, info, unlocked, (id) => {
+    save();
+    refreshList();
+    announce.textContent = `Achievement unlocked: ${info[id].title}`;
+  });
+
+  // Handle for automated play-testing in development only.
+  if (import.meta.env.DEV) (window as unknown as { __game: Game }).__game = game;
+
+  resetBtn.addEventListener('click', () => {
+    unlocked.clear();
+    save();
+    refreshList();
+  });
+
+  // Keyboard, only while the game has focus so the page still scrolls.
+  const keymap: Record<string, 'left' | 'right' | 'jump'> = {
+    ArrowLeft: 'left',
+    KeyA: 'left',
+    ArrowRight: 'right',
+    KeyD: 'right',
+    ArrowUp: 'jump',
+    KeyW: 'jump',
+    Space: 'jump',
+  };
+  canvas.addEventListener('keydown', (e) => {
+    if (e.code === 'Enter' || (!game.playing && e.code === 'Space')) {
+      e.preventDefault();
+      game.start();
+      return;
+    }
+    const k = keymap[e.code];
+    if (k) {
+      e.preventDefault();
+      game.input[k] = true;
+    }
+  });
+  canvas.addEventListener('keyup', (e) => {
+    const k = keymap[e.code];
+    if (k) game.input[k] = false;
+  });
+  canvas.addEventListener('blur', () => (game.input.left = game.input.right = game.input.jump = false));
+  canvas.addEventListener('pointerdown', () => {
+    canvas.focus({ preventScroll: true });
+    game.start();
+  });
+
+  // Touch buttons
+  root.querySelectorAll<HTMLElement>('[data-key]').forEach((btn) => {
+    const k = btn.dataset.key as 'left' | 'right' | 'jump';
+    const set = (on: boolean) => (e: Event) => {
+      e.preventDefault();
+      if (on) game.start();
+      game.input[k] = on;
+      btn.classList.toggle('is-down', on);
+    };
+    btn.addEventListener('pointerdown', set(true));
+    btn.addEventListener('pointerup', set(false));
+    btn.addEventListener('pointerleave', set(false));
+    btn.addEventListener('pointercancel', set(false));
+  });
+
+  // Only run while the game is on screen.
+  new IntersectionObserver(([entry]) => (entry.isIntersecting ? game.run() : game.stop())).observe(canvas);
+</script>
+
+<style>
+  .beyond {
+    padding: clamp(14px, 2.5vw, 22px);
+  }
+  .beyond__intro {
+    max-width: 70ch;
+    margin-bottom: 12px;
+  }
+
+  .game__stage {
+    display: grid;
+    place-items: center;
+    background: #000;
+    border: 2px solid;
+    border-color: #808080 #fff #fff #808080;
+  }
+  .game canvas {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    image-rendering: pixelated;
+    cursor: pointer;
+    outline: none;
+  }
+  .game canvas:focus-visible {
+    box-shadow: 0 0 0 2px #f7c843;
+  }
+  .game__help {
+    margin-top: 8px;
+    color: var(--text-dim);
+    font-size: 12.5px;
+  }
+  kbd {
+    padding: 0 4px;
+    border: 1px solid #919b9c;
+    border-radius: 3px;
+    background: #fff;
+    font: 11px var(--font-ui);
+  }
+
+  .game__pad {
+    display: none;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 10px;
+    user-select: none;
+    touch-action: none;
+  }
+  @media (pointer: coarse) {
+    .game__pad {
+      display: flex;
+    }
+    .game__help {
+      display: none;
+    }
+  }
+  .game__btn {
+    flex: 1;
+    height: 52px;
+    border: 1px solid var(--button-edge);
+    border-radius: 6px;
+    background: linear-gradient(180deg, #ffffff, #ecebe6 86%, #d6d0c5);
+    font: bold 18px var(--font-ui);
+    touch-action: none;
+  }
+  .game__btn--jump {
+    flex: 1.4;
+    color: #fff;
+    background: linear-gradient(180deg, #4fbf5a, #2d8f36);
+    border-color: #1d6b28;
+    font-size: 15px;
+  }
+  .game__btn.is-down {
+    filter: brightness(0.85);
+  }
+
+  .beyond__reset {
+    margin-left: 8px;
+    padding: 0 6px;
+    border: 1px solid #c5c2b2;
+    border-radius: 3px;
+    background: #fff;
+    color: var(--text-dim);
+    font: 11px var(--font-ui);
+    cursor: pointer;
+  }
+
+  .ach {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .ach__item {
+    display: flex;
+    gap: 12px;
+    padding: 10px;
+    border: 1px solid #e3e0d0;
+    border-radius: 3px;
+    background: #fff;
+    transition: opacity 0.3s;
+  }
+  .ach__icon {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    image-rendering: pixelated;
+  }
+  .ach__item.is-locked .ach__icon {
+    filter: grayscale(1) opacity(0.45);
+  }
+  .ach__item:not(.is-locked) {
+    border-color: #f2c94c;
+    background: #fffbea;
+  }
+  .ach__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    font-weight: bold;
+  }
+  .ach__tag {
+    padding: 0 6px;
+    border-radius: 2px;
+    background: var(--group-blue);
+    color: #fff;
+    font-size: 11px;
+  }
+  .ach__tag--winner {
+    background: #2f8f2f;
+  }
+  .ach__state {
+    color: var(--text-dim);
+    font-size: 11px;
+    font-weight: normal;
+  }
+  .ach__item:not(.is-locked) .ach__state {
+    color: #9a6b00;
+  }
+  .ach__date {
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+  .ach__text {
+    margin-top: 4px;
+    font-size: 13.5px;
+  }
+</style>

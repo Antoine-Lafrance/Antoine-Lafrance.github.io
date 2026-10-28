@@ -1,0 +1,234 @@
+WEBSITE PLAN — Antoine Lafrance
+================================
+
+Goal: a professional personal site with two parts:
+  1. About Me (home page): research first, then everything else.
+  2. Blog: a place to write posts.
+
+Hosting: GitHub Pages (this repo). Recommended stack: plain Jekyll, which
+GitHub Pages builds natively. Posts are Markdown files, so there's no build
+step to maintain. Use a small custom layout rather than a heavy academic
+theme, so the design stays fully ours.
+
+
+------------------------------------------------------------
+1. SITE STRUCTURE
+------------------------------------------------------------
+
+  /            About Me (home)
+  /blog/       Blog index (list of posts)
+  /blog/<slug> Individual post
+  /cv.pdf      Downloadable CV (English version, ideally)
+
+Top nav (same on every page):  Antoine Lafrance   About · Research · Blog · CV
+  - "Research" is an anchor link to the research section on the home page.
+  - Footer: email · GitHub · LinkedIn · Google Scholar (if any) · © year
+
+
+------------------------------------------------------------
+2. ABOUT ME (HOME PAGE): SECTIONS IN ORDER
+------------------------------------------------------------
+
+2.1  HERO / INTRO  (top of page, above the fold)
+     Left: name, one-line title, 3–4 sentence intro. Right: headshot.
+     Draft content:
+       - "M.Sc. student in Computer Engineering at Mila – Quebec AI
+         Institute and Polytechnique Montréal, in the Chandar Lab,
+         supervised by Prof. Sarath Chandar."
+       - One sentence on research interests (optimization for large
+         models, ML for biology/health).
+       - "Currently: using Bayesian optimisers for foundation models in
+         biology."
+     Icon links row: email, GitHub, LinkedIn, Scholar, CV.
+     Mila + Chandar Lab should be linked (mila.quebec, chandar-lab.github.io).
+
+2.2  RESEARCH  (the main section; it gets the most space)
+     a) "Current work" callout box, visually highlighted:
+          Bayesian optimisers for foundation models in biology
+          (Chandar Lab, Mila, Sept 2026 – present). 2–3 sentences: the
+          problem, why Bayesian optimisers, what you're testing.
+     b) Research interests: 3–4 short tags/phrases.
+     b2) Research path (2–3 sentences, before the papers):
+          Started research on my own initiative during my bachelor's
+          (an optional project, not a required internship): kidney
+          transplant allocation at Polytechnique Montréal, supervised by
+          Prof. Jonathan Jalbert. Working at the intersection of
+          programming, statistical modelling and health taught me how much
+          transparency, reliability and interpretability matter for tools
+          that can inform clinical decisions. That work led to the two
+          manuscripts below, and now continues at Mila.
+     c) Publications & projects: one card per paper:
+          - Title (linked to PDF/arXiv)
+          - Authors (your name in bold), venue, year
+          - 2–3 sentence "What I did" description: YOUR contribution,
+            not just the paper's abstract
+          - Small buttons: [PDF] [Code] [Slides/Poster] [BibTeX]
+          - Status label if relevant: Published / Under review / In prep
+        Both papers come from the Polytechnique research assistant role
+        (May 2025 – Aug 2026). Status label for both: "In preparation".
+
+          • Improving random survival forest models generating
+            individualized kidney graft and patient survival curves using
+            external and local cohorts
+            Qi, Y., Jalbert, J., Boivin, P. L., Bouchkari, R., Colette, S.,
+            **Lafrance, A.**, Lajnef, T., Basanets, A. O.,
+            Sapir-Pichhadze, R., Senecal, L., Thériault, L., & Cardinal, H.
+            (2026). Manuscript in preparation.
+              Summary: random survival forests trained on a large US cohort
+              (161,749 transplant recipients) are tested on 799 patients
+              from two Canadian transplant centres. Compares using the US
+              models as-is, training Canadian-only models, and combining
+              trees from both populations, plus augmenting the local data
+              with similar external patients or synthetic data.
+              What I did: designed a web interface that lets patients
+              explore their own predicted survival curves, so the model's
+              results are understandable to non-specialists.
+              Possible extra: link or screenshot of the web interface,
+              if it can be public.
+
+          • Predicting waiting time of patients waiting for a renal
+            transplant
+            Basanets, A. O., **Lafrance, A.**, Jalbert, J., Thériault, L.,
+            & Cardinal, H. (2026). Manuscript in preparation.
+              Summary: predicts how long patients on Québec's kidney
+              transplant waiting list will wait, by simulating the
+              allocation process to see how patient characteristics and
+              allocation rules affect time to transplant.
+              What I did: built the Julia library that reproduces
+              allocation scenarios with resampling (bootstrapping), and
+              proposed methods for evaluating and comparing the simulation
+              results (incl. a composite score for comparing allocation
+              systems worldwide). Also built and presented a GUI to
+              Transplant-Québec's kidney-pancreas council.
+              Possible extra: link to the Julia library on GitHub, if
+              it's public.
+
+        Section framing: both papers share a theme of "ML and simulation
+        for kidney transplantation", which links naturally to the current
+        biology work, so the research section reads as one story:
+        ML for health and biology.
+     d) Funding line (small text under publications): NSERC research
+        award (USRA) + supplement; CAE R.-Fraser-Elliott excellence
+        scholarship.
+
+2.3  EDUCATION  (compact; one line per entry)
+       - M.Sc. Computer Engineering, Mila / Polytechnique Montréal,
+         2026 – 2028 (expected). Supervisor: Sarath Chandar.
+       - B.Eng. Software Engineering, Polytechnique Montréal,
+         2022 – 2026. GPA 3.98/4.
+
+2.4  EXPERIENCE  (compact timeline, 1 line + 1 short sentence each)
+       - Research Assistant in kidney transplantation, Polytechnique
+         Montréal (May 2025 – Aug 2026), supervised by Jonathan Jalbert.
+         Self-initiated. Julia allocation simulator, results-exploration
+         GUI presented to Transplant-Québec, composite score for
+         comparing allocation systems → links to the papers above
+       - Lab Instructor, MTH3302 & LOG1810, Polytechnique Montréal
+         (Jan 2025 – Apr 2026): weekly sessions on logic, number theory
+         and CS fundamentals; coaching rigorous problem-solving and
+         explaining technical ideas clearly
+       - Software Engineering Intern, Morgan Stanley (summer 2024):
+         yield-curve comparison tool (Angular + Spring Boot)
+       - Machine Learning Intern, Innodata (summer 2022): NLP research,
+         Kaggle problems
+
+2.5  BEYOND RESEARCH  (the non-research part; lighter, more personal tone)
+     Laid out as a grid of small cards, not a dense list.
+     One-line intro above the cards: applying technical skills in
+     interdisciplinary settings, working with varied partners, and
+     giving back to the community.
+       Competitions & hackathons:
+         - HackMIT 2025 (MIT): smart glasses to support people with
+           dementia, powered by our own retrieval-augmented generation
+           (RAG) system (got a travel grant)
+         - McKinsey Challenge: winner (2024); solutions were implemented
+           by a local non-profit
+         - PolyAI CodeML: winner (2022–2024); quantum computing, biology,
+           flood prediction from real-time precipitation + topography data
+         - Polyfinances Datathon: podium (2023–2024); ML quant trading,
+           AI assistant for analysts on AWS
+         - IBM Pro Bono: podium (2023)
+       Leadership & involvement:
+         - PolyMonde (Polytechnique's oldest student committee): Head of
+           Fundraising (Sept 2025 – 2027); builds corporate partnerships
+           and funds the committee's initiatives. Through PolyMonde,
+           visited 40+ AI companies across three countries. This is a
+           good candidate for a highlight card (naming the countries
+           would make it more concrete).
+         - CCGP (Polytechnique consulting club): VP Competitions;
+           organized a $3,000 case competition with a pension fund;
+           Grow@BCG
+       Personal: a short paragraph on hobbies/interests (to be written
+       by you, which gives the site its human side).
+
+2.6  LATEST POSTS  (small strip at the bottom of the home page)
+     The 3 most recent blog posts (title + date), plus a "All posts →" link.
+     Ties the two parts of the site together.
+
+Not on the site: phone number (it's on the CV, but don't publish it).
+
+
+------------------------------------------------------------
+3. BLOG DESIGN
+------------------------------------------------------------
+
+3.1  Blog index (/blog/)
+     - Simple reverse-chronological list, grouped by year.
+     - Each row: date · title · 1-line summary · tags.
+     - Tag filter at top (e.g. research, ML, notes, personal).
+     - No thumbnails by default: text-first and fast.
+
+3.2  Post page
+     - Narrow reading column (~680px max width), large readable body
+       font, generous line height.
+     - Header: title, date, reading time, tags.
+     - Must support research-style writing:
+         • LaTeX math (KaTeX)
+         • Syntax-highlighted code blocks
+         • Figures with captions
+         • Footnotes / sidenotes
+         • Optional table of contents for long posts
+     - Footer: "← previous / next →" links, and an optional citation
+       block (BibTeX) for technical posts.
+
+3.3  Writing workflow
+     - New post = new Markdown file in _posts/YYYY-MM-DD-title.md with a
+       short front-matter header (title, date, tags, summary).
+     - Push to main → GitHub Pages rebuilds automatically.
+     - RSS/Atom feed (jekyll-feed) so people can subscribe.
+
+
+------------------------------------------------------------
+4. VISUAL DESIGN DIRECTION
+------------------------------------------------------------
+
+  - Tone: clean academic, quiet and confident; content over decoration.
+  - Typography: serif for headings and blog body (e.g. Source Serif),
+    clean sans for UI/nav (e.g. Inter). Mono for code.
+  - Color: mostly neutral (off-white / near-black), ONE accent color
+    for links, the "Current work" callout, and tags.
+  - Light + dark mode (follows system setting, with a toggle).
+  - Single-column layout, max ~900px for the home page and ~680px for
+    posts. Mobile-first; must look good on a phone.
+  - Fast: no heavy JS frameworks; static pages only.
+
+
+------------------------------------------------------------
+5. OPEN QUESTIONS (needed before building)
+------------------------------------------------------------
+
+  1. Papers: both kidney manuscripts are now in section 2.2. Can the
+     patient web interface and the Julia library be linked publicly?
+     Should the GUI shown to Transplant-Québec go under the
+     waiting-time paper (as drafted)?
+  2. Current project: by "Bayesian optimisers" do you mean Bayesian
+     optimization (e.g. for hyperparameters) or Bayesian/variational
+     optimizers for training (e.g. IVON)? Which foundation models
+     (protein, genomics, single-cell...)? How much can be public?
+  3. Language: English only, or English + French?
+  4. Contact email to show: Mila or Polytechnique address?
+  5. Headshot photo available?
+  6. Google Scholar / OpenReview / X / Bluesky profiles to link?
+  7. A personal blurb for the "Beyond research" section (hobbies etc.).
+  9. PolyMonde trip (optional): which three countries, and when?
+  8. Custom domain, or keep antoine-lafrance.github.io?

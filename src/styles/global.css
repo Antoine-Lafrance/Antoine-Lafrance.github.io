@@ -1,0 +1,229 @@
+/* ------------------------------------------------------------------
+   Early-2000s desktop theme (blue "Luna"-style chrome).
+   All artwork is original CSS/SVG; no OS assets are used.
+   ------------------------------------------------------------------ */
+:root {
+  --face: #ece9d8; /* window / dialog face */
+  --face-light: #f6f5ee;
+  --white: #ffffff;
+  --frame: #0831d9; /* window border */
+  --frame-dark: #0019a8;
+  --text: #000000;
+  --text-dim: #4d4d4d;
+  --link: #0b3fbf;
+  --link-hover: #e6741b;
+  --select: #316ac5; /* list selection */
+  --group-blue: #215dc6; /* explorer group headers */
+  --pane-top: #7ba2e7;
+  --pane-bottom: #6375d6;
+  --pane-head: #c6d3f7;
+  --border: #919b9c; /* control borders */
+  --button-edge: #003c74;
+  --green: #3eb23e;
+
+  --titlebar: linear-gradient(
+    180deg,
+    #0997ff 0%,
+    #0053ee 8%,
+    #0050ee 40%,
+    #0066ff 88%,
+    #0066ff 93%,
+    #005bff 95%,
+    #003dd7 96%,
+    #003dd7 100%
+  );
+  --taskbar: linear-gradient(
+    180deg,
+    #1f2f86 0,
+    #3165c4 3%,
+    #3682e5 6%,
+    #4490e6 10%,
+    #3883e5 12%,
+    #2b71e0 15%,
+    #2663da 18%,
+    #235bd6 20%,
+    #2258d5 23%,
+    #2157d6 38%,
+    #245ddb 54%,
+    #2562df 86%,
+    #245fdc 89%,
+    #2158d4 92%,
+    #1d4ec0 95%,
+    #1941a5 98%
+  );
+
+  --font-ui: Tahoma, Verdana, 'Segoe UI', sans-serif;
+  --font-title: 'Trebuchet MS', Tahoma, sans-serif;
+  --font-mono: 'Lucida Console', 'Courier New', monospace;
+
+  --taskbar-h: 34px;
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 24px;
+  -webkit-text-size-adjust: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding-bottom: var(--taskbar-h);
+  background-color: #3a6ea5;
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.55;
+  overflow-x: hidden;
+}
+
+a {
+  color: var(--link);
+}
+a:hover {
+  color: var(--link-hover);
+}
+
+:focus-visible {
+  outline: 1px dotted #000;
+  outline-offset: 2px;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  line-height: 1.25;
+}
+p {
+  margin: 0;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: -60px;
+  z-index: 300;
+  padding: 6px 12px;
+  background: var(--face);
+  border: 1px solid var(--button-edge);
+}
+.skip-link:focus {
+  top: 16px;
+}
+
+/* ------------------------------------------------------------------
+   Controls
+   ------------------------------------------------------------------ */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 75px;
+  min-height: 23px;
+  padding: 3px 12px;
+  border: 1px solid var(--button-edge);
+  border-radius: 3px;
+  background: linear-gradient(180deg, #ffffff 0%, #ecebe6 86%, #d6d0c5 100%);
+  box-shadow: inset -1px -1px 0 #d6d0c5, inset 1px 1px 0 #fff;
+  color: #000;
+  font: 13px var(--font-ui);
+  text-decoration: none;
+  cursor: pointer;
+}
+.button:hover {
+  color: #000;
+  box-shadow: inset -1px 1px 0 #fff0cf, inset 1px 2px 0 #fdd889, inset -2px 2px 0 #fbc761,
+    inset 2px -2px 0 #e5a01a;
+}
+.button:active {
+  background: linear-gradient(180deg, #cdcac3 0%, #e3e3db 8%, #e5e5de 94%, #f2f2f1 100%);
+}
+.button--default {
+  box-shadow: inset -1px 1px 0 #cee7ff, inset 1px 2px 0 #98b8ea, inset -2px 2px 0 #bcd4f6,
+    inset 1px -1px 0 #89ade4, inset 2px -2px 0 #89ade4;
+}
+
+.fieldset {
+  margin: 0;
+  padding: 10px 12px 12px;
+  border: 1px solid #d0d0bf;
+  border-radius: 4px;
+}
+.fieldset > legend {
+  padding: 0 4px;
+  color: var(--group-blue);
+  font-size: 13px;
+}
+
+.progress {
+  height: 16px;
+  padding: 2px;
+  border: 1px solid #686868;
+  border-radius: 3px;
+  background: #fff;
+  overflow: hidden;
+}
+.progress > span {
+  display: block;
+  height: 100%;
+  /* green blocks separated by white gaps */
+  background:
+    repeating-linear-gradient(90deg, transparent 0 8px, #fff 8px 10px),
+    linear-gradient(180deg, #acedad 0%, #7be47d 14%, #4cda50 28%, #2ed330 42%, #42d845 57%, #76e275 71%, #8fe791 85%, #ffffff 100%);
+}
+
+/* Explorer-style "Show in Groups" heading */
+.group-head {
+  margin: 22px 0 12px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid;
+  border-image: linear-gradient(90deg, #a4b9e9, transparent) 1;
+  color: var(--group-blue);
+  font: bold 13px var(--font-ui);
+}
+.group-head:first-child {
+  margin-top: 4px;
+}
+
+/* ------------------------------------------------------------------
+   Page layout
+   ------------------------------------------------------------------ */
+main {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 40px;
+  width: min(980px, 100% - 32px);
+  margin: 0 auto;
+  padding: 48px 0 72px;
+}
+
+@media (min-width: 1240px) {
+  main {
+    margin-left: max(150px, calc((100% - 980px) / 2));
+  }
+}
