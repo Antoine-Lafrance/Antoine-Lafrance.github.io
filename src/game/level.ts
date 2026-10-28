@@ -24,8 +24,8 @@ const SECTIONS: SectionSpec[] = [
     gaps: [[26, 28]],
     platforms: [[6, 19, 23]],
     blocks: [[6, 11], [6, 13]],
-    coins: [[8, 14], [8, 16], [8, 31], [8, 33], [8, 35]],
-    achievements: [[5, 21, 'codeml']],
+    coins: [[8, 14], [8, 16], [5, 20], [5, 22], [8, 31], [8, 33], [8, 35]],
+    achievements: [],
   },
   {
     era: 'consulting',

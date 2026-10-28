@@ -227,8 +227,10 @@ export type Card = {
   date: string;
   text: string;
   pin?: string;
-  /** optional link to the project, shown on its achievement card */
+  /** optional link to the project, shown on its card and in Awards.txt */
   link?: { label: string; href: string };
+  /** optional description shown under it in Awards.txt */
+  awardNote?: string;
 };
 
 export const competitions: Card[] = [
@@ -253,6 +255,9 @@ export const competitions: Card[] = [
       'In 2026 I took part again and won with a tool that scans recycled lenses and 3D-prints custom frames for them: ' +
       'it was used in Mali to make over 1,000 pairs of glasses for children in need, with Santé numérique sans frontières.',
     link: { label: 'See the 2026 glasses tool', href: 'https://glasses-eta.vercel.app/' },
+    awardNote:
+      'In 2026 I took part again and won with a tool that scans recycled lenses and 3D-prints custom frames for them: ' +
+      'it was used in Mali to make over 1,000 pairs of glasses for children in need, with Santé numérique sans frontières.',
   },
   {
     title: 'Polyfinances Datathon',

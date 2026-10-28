@@ -17,15 +17,15 @@ import {
 
 const base = import.meta.env.BASE_URL;
 
-// Awards.txt: scholarships and academic, then competition results (with
-// the project URL on the next line when there is one).
-const awardGroups: { group: string; items: { text: string; url?: string }[] }[] = [
+// Awards.txt: scholarships and academic, then competition results, each
+// followed by its description and project URL when it has them.
+const awardGroups: { group: string; items: { text: string; note?: string; url?: string }[] }[] = [
   ...awards.map((g) => ({ group: g.group, items: g.items.map((text) => ({ text })) })),
   {
     group: 'Competitions',
     items: competitions
       .filter((c) => c.tag)
-      .map((c) => ({ text: `${c.tag}: ${c.title} (${c.date})`, url: c.link?.href })),
+      .map((c) => ({ text: `${c.tag}: ${c.title} (${c.date})`, note: c.awardNote, url: c.link?.href })),
   },
 ];
 
@@ -140,6 +140,12 @@ const builtPct = Math.min(100, Math.max(0, ((Date.now() - msStart) / (msEnd - ms
             {g.items.map((item) => (
               <li class="notepad__line">
                 * {item.text}
+                {item.note && (
+                  <>
+                    <br />
+                    <span class="notepad__note">{item.note}</span>
+                  </>
+                )}
                 {item.url && (
                   <>
                     <br />

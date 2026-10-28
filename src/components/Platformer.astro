@@ -10,7 +10,6 @@ const club = (title: string) => leadership.find((c) => c.title === title)!;
 
 // In the order they appear in the game.
 const achievements = [
-  { id: 'codeml', icon: 'chip', ...pick(comp('PolyAI CodeML')) },
   { id: 'ccgp', icon: 'briefcase', ...pick(club('CCGP')), title: 'Joined CCGP' },
   { id: 'ibm', icon: 'heart', ...pick(comp('IBM Pro Bono')) },
   { id: 'datathon', icon: 'chart', ...pick(comp('Polyfinances Datathon')) },
@@ -104,7 +103,8 @@ function pick(c: Card) {
       return new Set<string>();
     }
   };
-  const unlocked = load();
+  // Ignore anything saved for achievements that no longer exist.
+  const unlocked = new Set([...load()].filter((id) => id in info));
   const save = () => {
     try {
       localStorage.setItem(KEY, JSON.stringify([...unlocked]));
