@@ -149,9 +149,9 @@ Top nav (same on every page):  Antoine Lafrance   About · Research · Blog · C
            AI assistant for analysts on AWS
          - IBM Pro Bono: podium (2023)
        Leadership & involvement:
-         - PolyMonde (Polytechnique's oldest student committee): Head of
-           Fundraising (Sept 2025 – 2027); builds corporate partnerships
-           and funds the committee's initiatives. Through PolyMonde,
+         - PolyMonde (Polytechnique's oldest student committee): VP
+           Financing (Sept 2025 – 2027); raised over $100,000 CAD through
+           corporate partnerships to fund the committee's initiatives. Through PolyMonde,
            visited 80+ companies (research on AI, critical minerals, etc.) across three countries. This is a
            good candidate for a highlight card (naming the countries
            would make it more concrete).

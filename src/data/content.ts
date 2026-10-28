@@ -271,9 +271,9 @@ export const competitions: Card[] = [
 export const leadership: Card[] = [
   {
     title: 'PolyMonde',
-    tag: 'Head of Fundraising',
+    tag: 'VP Financing',
     date: 'Sept 2025 — 2027',
-    text: 'Polytechnique’s oldest student committee. I build corporate partnerships and fund the committee’s initiatives, and visited 80+ companies with research focuses ranging from AI to critical minerals, across three countries.',
+    text: 'Polytechnique’s oldest student committee. As VP Financing, I have raised over $100,000 CAD through corporate partnerships to fund the committee’s initiatives, and visited 80+ companies with research focuses ranging from AI to critical minerals, across three countries.',
   },
   {
     title: 'CCGP',
